@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# NOTE: backend/output/results.json, backend/output/figures/, and
+# frontend/results.snapshot.json are intentionally NOT ignored — see
+# SYSTEM.md §5 for why they are committed to the repo.
