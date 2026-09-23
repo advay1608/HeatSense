@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heat Risk Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hd">
+    <div>
+      <p class="kicker">Statistical Identification of High-Temperature Risk</p>
+      <h1>Heat Risk Dashboard</h1>
+    </div>
+    <div class="meta" id="metaLine">loading…</div>
+  </header>
+
+  <section class="chart-card">
+    <div class="chart-head">
+      <h2>Temperature record &amp; projection</h2>
+      <div class="legend">
+        <span><i class="sw solid"></i> recorded</span>
+        <span><i class="sw dash"></i> projected</span>
+        <span><i class="sw band"></i> ±1 / ±2 SD</span>
+        <span><i class="sw thr"></i> threshold</span>
+      </div>
+    </div>
+    <canvas id="timelineCanvas" height="280"></canvas>
+    <div class="scrollrow">
+      <input type="range" id="panSlider" min="0" max="100" value="100" aria-label="Pan timeline">
+      <span class="scrollhint">drag to look further back</span>
+    </div>
+  </section>
+
+  <section class="grid2">
+
+    <div class="card">
+      <h2>Threshold &amp; risk</h2>
+      <label class="slabel" for="thresholdSlider">
+        Extreme-heat threshold: <strong id="thresholdVal">--</strong> °C
+      </label>
+      <input type="range" id="thresholdSlider" min="28" max="42" step="0.5" value="36">
+
+      <div class="gaugewrap">
+        <div class="gauge">
+          <div class="gaugefill" id="gaugeFill"></div>
+        </div>
+        <div class="gaugelabels"><span>low</span><span>moderate</span><span>high</span></div>
+      </div>
+
+      <div class="bignum">
+        <span id="probBig">--%</span>
+        <span class="bignum-sub" id="returnPeriod">--</span>
+      </div>
+
+      <div class="modeltoggle" id="modelToggle"></div>
+      <p class="finenote">Live recompute is exact for the model used to build this snapshot; other models show their pre-computed value.</p>
+    </div>
+
+    <div class="card">
+      <h2>Three independent checks</h2>
+      <p class="cardsub">Same threshold, three different methods of estimating the probability.</p>
+      <table class="cmp" id="comparisonTable"></table>
+
+      <h2 class="mt">Core statistics</h2>
+      <table class="cmp" id="statsTable"></table>
+    </div>
+
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>Assumption checks</h2>
+      <div id="assumptions"></div>
+    </div>
+    <div class="card">
+      <h2>Composite Heat Risk Index</h2>
+      <div id="synthesisBox"></div>
+    </div>
+  </section>
+
+  <footer class="ft">
+    Numbers reflect a frozen snapshot of <code>backend/output/results.json</code>.
+    Refresh via <code>run_pipeline.py</code> then re-copy the snapshot — see ARCHITECTURE.md §4.
+  </footer>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
