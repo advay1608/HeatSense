@@ -906,6 +906,78 @@ body:not(.loading) .skeleton-card { display: none; }
   padding: 0.15rem 0.4rem; border-radius: 4px; color: var(--ink-2);
 }
 
+/* ── 20.5 Help Tooltips ────────────────────────────────────── */
+.help-tooltip {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 1000;
+  white-space: normal;
+  width: max-content;
+  max-width: 240px;
+  text-align: center;
+  line-height: 1.4;
+}
+.help-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--ink);
+}
+.help-tooltip.visible { opacity: 1; }
+
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  cursor: help;
+  margin-left: 0.4rem;
+  vertical-align: -3px;
+  transition: color var(--transition);
+}
+.help-icon:hover { color: var(--blue); }
+.help-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+
+/* ── 20.6 Custom Scrollbars ────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(122, 143, 160, 0.35);
+  border-radius: 99px;
+  border: 2px solid var(--canvas);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 143, 160, 0.65);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(144, 175, 196, 0.25);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(144, 175, 196, 0.45);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(122, 143, 160, 0.35) transparent;
+}
+
 /* ── 21. Print styles ───────────────────────────────────────── */
 @media print {
   .sidebar, .topbar, .pan-row, .scroll-progress,

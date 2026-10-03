@@ -21,6 +21,9 @@
   <!-- Canvas tooltip (fixed, follows mouse over timeline) -->
   <div class="canvas-tooltip" id="canvasTooltip"></div>
 
+  <!-- Help tooltip (fixed) -->
+  <div class="help-tooltip" id="helpTooltip"></div>
+
   <div class="app-shell">
 
     <!-- ═══ SIDEBAR ═══ -->
@@ -302,7 +305,7 @@
           <div class="section-header" style="margin-bottom:1rem">
             <div>
               <p class="section-label">Model fit quality</p>
-              <h3 class="insight-heading">AIC scores — lower is better fit</h3>
+              <h3 class="insight-heading">AIC scores — lower is better fit <span class="help-icon" data-tip="Akaike Information Criterion (AIC) estimates relative model quality. Lower scores indicate a better fit."><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg></span></h3>
             </div>
             <span class="section-badge">Best model highlighted</span>
           </div>
@@ -349,7 +352,7 @@
           <article class="detail-card detail-red">
             <div class="detail-accent"></div>
             <p class="section-label">Composite score</p>
-            <h3 class="detail-heading">Heat risk index</h3>
+            <h3 class="detail-heading">Heat risk index <span class="help-icon" data-tip="A composite score combining base probability, recent trends, and temperature clustering."><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg></span></h3>
             <div id="synthesisBox"></div>
           </article>
         </div>
