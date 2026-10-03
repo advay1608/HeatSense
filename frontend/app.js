@@ -1,11 +1,3 @@
-/* ============================================================
-   HeatSense — app.js  (v2 — full feature set)
-   Reads ./results.snapshot.json only.
-   Features: arc gauge, countUp, dark mode, slider tooltip,
-             hero colour shift, canvas hover tooltip, AIC chart,
-             live comparison, skeletons, toast, scroll progress.
-   ============================================================ */
-
 'use strict';
 
 /* ── Global state ─────────────────────────────────────────── */
@@ -15,17 +7,14 @@ let currentThreshold = 36;
 let prevBand        = null;   // for toast on band change
 let sensitivityChart = null;
 let aicChart         = null;
+let timelineChart    = null;
 
 /* ── Arc gauge math constants ─────────────────────────────── */
-const ARC_R      = 100;                         // radius of arc
-const ARC_CX     = 130;                         // center-x in viewBox
-const ARC_CY     = 130;                         // center-y in viewBox
-const ARC_LEN    = Math.PI * ARC_R;             // ≈ 314.16
-const ARC_MAX_P  = 0.25;                        // gauge "full" at 25% prob
-
-/* ─────────────────────────────────────────────────────────── */
-/* 1. FETCH                                                    */
-/* ─────────────────────────────────────────────────────────── */
+const ARC_R      = 100;
+const ARC_CX     = 130;
+const ARC_CY     = 130;
+const ARC_LEN    = Math.PI * ARC_R;
+const ARC_MAX_P  = 0.25;
 
 fetch('./results.snapshot.json')
   .then(r => r.json())
@@ -36,10 +25,6 @@ fetch('./results.snapshot.json')
     document.body.classList.remove('loading');
     console.error(err);
   });
-
-/* ─────────────────────────────────────────────────────────── */
-/* 2. CDF IMPLEMENTATIONS (unchanged)                          */
-/* ─────────────────────────────────────────────────────────── */
 
 function erf(x) {
   const sign = x < 0 ? -1 : 1;
@@ -95,10 +80,6 @@ function modelLabel(name) {
   return ({normal:'Normal', lognorm:'Log-normal', gamma:'Gamma', gumbel_r:'Gumbel'})[name] || name;
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 3. RISK BAND HELPERS                                        */
-/* ─────────────────────────────────────────────────────────── */
-
 function bandFor(prob) {
   const bands = DATA?.synthesis?.risk_bands_reference;
   if (!bands) { return prob <= 0.05 ? 'low' : prob <= 0.15 ? 'moderate' : 'high'; }
@@ -106,26 +87,17 @@ function bandFor(prob) {
   return bands[bands.length-1].label;
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 4. COUNT-UP ANIMATION                                       */
-/* ─────────────────────────────────────────────────────────── */
-
 function countUp(el, target, suffix = '', decimals = 2, duration = 900) {
   if (!el) return;
   const start = performance.now();
   function step(now) {
     const t = Math.min((now - start) / duration, 1);
-    // Ease out cubic
     const eased = 1 - Math.pow(1 - t, 3);
     el.textContent = (target * eased).toFixed(decimals) + suffix;
     if (t < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 5. DARK MODE                                                */
-/* ─────────────────────────────────────────────────────────── */
 
 function initDarkMode() {
   const saved      = localStorage.getItem('heatsense-theme');
@@ -143,7 +115,6 @@ function applyDarkMode(isDark, save) {
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   document.getElementById('darkToggle').setAttribute('aria-pressed', isDark);
   if (save) localStorage.setItem('heatsense-theme', isDark ? 'dark' : 'light');
-  // Update Chart.js themes
   updateChartsTheme(isDark);
 }
 
@@ -151,20 +122,21 @@ function updateChartsTheme(isDark) {
   const tickColor = isDark ? '#506980' : '#7a8fa0';
   const gridColor = isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.05)';
   const titleColor = tickColor;
-  [sensitivityChart, aicChart].forEach(chart => {
+  [sensitivityChart, aicChart, timelineChart].forEach(chart => {
     if (!chart) return;
-    Object.values(chart.options.scales).forEach(scale => {
-      if (scale.ticks)  scale.ticks.color = tickColor;
-      if (scale.grid)   scale.grid.color = gridColor;
-      if (scale.title)  scale.title.color = titleColor;
-    });
+    if (chart.options.scales) {
+      Object.values(chart.options.scales).forEach(scale => {
+        if (scale.ticks)  scale.ticks.color = tickColor;
+        if (scale.grid)   scale.grid.color = gridColor;
+        if (scale.title)  scale.title.color = titleColor;
+      });
+    }
+    if (chart.options.plugins?.legend?.labels) {
+      chart.options.plugins.legend.labels.color = tickColor;
+    }
     chart.update('none');
   });
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 6. SCROLL PROGRESS BAR                                      */
-/* ─────────────────────────────────────────────────────────── */
 
 function initScrollProgress() {
   const bar = document.getElementById('scrollProgress');
@@ -176,10 +148,6 @@ function initScrollProgress() {
   }, { passive: true });
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 7. SLIDER TOOLTIP                                           */
-/* ─────────────────────────────────────────────────────────── */
-
 function updateSliderTooltip() {
   const slider  = document.getElementById('thresholdSlider');
   const tooltip = document.getElementById('sliderTooltip');
@@ -188,7 +156,6 @@ function updateSliderTooltip() {
   const max = parseFloat(slider.max);
   const val = parseFloat(slider.value);
   const pct = (val - min) / (max - min);
-  // Account for thumb width (~10px each side)
   const thumbW = 10;
   const trackW = slider.offsetWidth - thumbW * 2;
   const leftPx = thumbW + pct * trackW;
@@ -201,10 +168,6 @@ function hideSliderTooltip() {
   document.getElementById('sliderTooltip')?.classList.remove('visible');
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 8. SLIDER GRADIENT                                          */
-/* ─────────────────────────────────────────────────────────── */
-
 function updateSliderGradient() {
   const slider = document.getElementById('thresholdSlider');
   if (!slider) return;
@@ -215,14 +178,9 @@ function updateSliderGradient() {
   slider.style.background = `linear-gradient(90deg, var(--red) ${pct}%, var(--border) ${pct}%)`;
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 9. ARC GAUGE                                                */
-/* ─────────────────────────────────────────────────────────── */
-
 function updateArcGauge(prob) {
   const arcFill   = document.getElementById('arcFill');
   const arcNeedle = document.getElementById('arcNeedle');
-  const arcProb   = document.getElementById('arcProbText');
   const arcBand   = document.getElementById('arcBandText');
   if (!arcFill) return;
 
@@ -232,10 +190,7 @@ function updateArcGauge(prob) {
   arcFill.style.strokeDasharray  = ARC_LEN;
   arcFill.style.strokeDashoffset = dashOffset;
 
-  // Move needle dot to tip of fill arc
   if (arcNeedle && prob !== null) {
-    // Angle: starts at π (left) ends at 0 (right), fill goes left-to-right
-    const angle = Math.PI - fillFrac * Math.PI; // radians from center
     const nx = ARC_CX + ARC_R * Math.cos(Math.PI - fillFrac * Math.PI);
     const ny = ARC_CY - ARC_R * Math.sin(fillFrac * Math.PI);
     arcNeedle.setAttribute('cx', nx);
@@ -251,19 +206,11 @@ function updateArcGauge(prob) {
   }
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 10. HERO COLOUR SHIFT                                       */
-/* ─────────────────────────────────────────────────────────── */
-
 function updateHeroColor(band) {
   const hero = document.getElementById('heroBand');
   if (!hero) return;
   hero.className = 'hero-band' + (band ? ` band-${band}` : '');
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 11. TOAST NOTIFICATIONS                                     */
-/* ─────────────────────────────────────────────────────────── */
 
 function showToast(message, band) {
   const container = document.getElementById('toastContainer');
@@ -277,78 +224,6 @@ function showToast(message, band) {
     toast.addEventListener('animationend', () => toast.remove(), { once: true });
   }, 3000);
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 12. CANVAS HOVER TOOLTIP                                    */
-/* ─────────────────────────────────────────────────────────── */
-
-function initCanvasTooltip() {
-  const canvas  = document.getElementById('timelineCanvas');
-  const tooltip = document.getElementById('canvasTooltip');
-  if (!canvas || !tooltip) return;
-
-  canvas.addEventListener('mousemove', e => {
-    if (!DATA) return;
-    const rect  = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-
-    const cs     = DATA.core_stats;
-    const trend  = DATA.trend;
-    const nDays  = cs.n_days;
-    const residuals = trend?.residuals || [];
-    const projDays  = 7;
-    const total     = nDays + projDays;
-
-    const panFrac     = document.getElementById('panSlider').value / 100;
-    const visibleSpan = Math.min(total, 30);
-    const maxStart    = total - visibleSpan;
-    const start       = Math.round(maxStart * panFrac);
-
-    const padL = 50, padR = 20;
-    const dpr  = window.devicePixelRatio || 1;
-    const cssWidth = parseFloat(canvas.style.width) || (canvas.parentElement.clientWidth - 40);
-    const plotW = cssWidth - padL - padR;
-
-    // Find nearest day index
-    const dayFloat = start + ((mouseX - padL) / plotW) * (visibleSpan - 1);
-    const dayIdx   = Math.round(dayFloat);
-
-    if (dayIdx < start || dayIdx >= start + visibleSpan) {
-      tooltip.classList.remove('visible');
-      return;
-    }
-
-    const meanLine  = i => cs.mean + trend.slope_c_per_day * (i - nDays / 2);
-    const isRecorded = dayIdx < nDays;
-    const temp = isRecorded
-      ? meanLine(dayIdx) + (residuals[dayIdx] || 0)
-      : meanLine(dayIdx);
-
-    const above = temp > currentThreshold;
-    tooltip.innerHTML = `
-      <strong>${temp.toFixed(2)}°C${above ? ' 🔴' : ''}</strong>
-      Day ${dayIdx + 1} · ${isRecorded ? 'Recorded' : 'Projected'}
-      ${above ? '<br><span style="color:#f48080">Above threshold</span>' : ''}
-    `;
-    tooltip.classList.add('visible');
-    // Position tooltip
-    const tx = e.clientX + 14;
-    const ty = e.clientY - 10;
-    tooltip.style.left = tx + 'px';
-    tooltip.style.top  = ty + 'px';
-    // Keep in viewport
-    const tipW = tooltip.offsetWidth;
-    if (tx + tipW > window.innerWidth - 16) {
-      tooltip.style.left = (e.clientX - tipW - 14) + 'px';
-    }
-  });
-
-  canvas.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
-}
-
-/* ─────────────────────────────────────────────────────────── */
-/* 12.5 HELP TOOLTIPS                                          */
-/* ─────────────────────────────────────────────────────────── */
 
 function initHelpTooltips() {
   const tooltip = document.getElementById('helpTooltip');
@@ -374,10 +249,6 @@ function initHelpTooltips() {
     }
   });
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 13. LIVE MODEL COMPARISON                                   */
-/* ─────────────────────────────────────────────────────────── */
 
 function updateLiveComparison() {
   const grid    = document.getElementById('liveCompGrid');
@@ -406,10 +277,6 @@ function updateLiveComparison() {
   });
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 14. SIDEBAR NAV HIGHLIGHTING                                */
-/* ─────────────────────────────────────────────────────────── */
-
 function setupNavHighlighting() {
   const sections = document.querySelectorAll('.section[id]');
   const navLinks  = document.querySelectorAll('.nav-item[data-section]');
@@ -427,10 +294,6 @@ function setupNavHighlighting() {
 
   sections.forEach(s => observer.observe(s));
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 15. CHARTS (sensitivity + AIC)                              */
-/* ─────────────────────────────────────────────────────────── */
 
 function getChartColors(isDark) {
   return {
@@ -508,16 +371,11 @@ function buildAicChart(data) {
   });
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 16. INIT                                                    */
-/* ─────────────────────────────────────────────────────────── */
-
 function init(data) {
   const dfit = data.distribution_fit;
   currentModel    = dfit.best_model;
   currentThreshold = dfit.threshold_c;
 
-  // Meta line
   const generatedAt = data._meta?.generated_at
     ? new Date(data._meta.generated_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
     : 'snapshot';
@@ -526,7 +384,6 @@ function init(data) {
   const tStatus = document.getElementById('topbarStatus');
   if (tStatus) tStatus.textContent = generatedAt;
 
-  // Threshold slider
   const slider = document.getElementById('thresholdSlider');
   if (slider) {
     slider.value = currentThreshold;
@@ -544,7 +401,6 @@ function init(data) {
     slider.addEventListener('blur',       hideSliderTooltip);
   }
 
-  // Mobile sidebar toggle
   const menuBtn = document.getElementById('menuBtn');
   const sidebar = document.getElementById('sidebar');
   if (menuBtn && sidebar) {
@@ -555,13 +411,9 @@ function init(data) {
     });
   }
 
-  // Dark mode
   initDarkMode();
-
-  // Scroll progress
   initScrollProgress();
 
-  // Build everything
   buildModelToggle(dfit);
   buildForecast(data);
   buildComparisonTable(data);
@@ -572,23 +424,17 @@ function init(data) {
   buildAicChart(data);
   updateLiveComparison();
   setupNavHighlighting();
-  initCanvasTooltip();
   initHelpTooltips();
 
-  // Pan slider + resize
-  document.getElementById('panSlider').addEventListener('input', drawTimeline);
-  window.addEventListener('resize', drawTimeline);
+  document.getElementById('panSlider')?.addEventListener('input', () => {
+    // We can use animation: false to make sliding feel instant like before
+    if (timelineChart) timelineChart.options.animation = false;
+    buildTimelineChart(DATA);
+  });
 
-  // Remove skeleton class
   document.body.classList.remove('loading');
-
-  // Render & animate
-  render(true /* firstLoad */);
+  render(true);
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 17. RENDER (called on every threshold/model change)         */
-/* ─────────────────────────────────────────────────────────── */
 
 function render(firstLoad = false) {
   document.getElementById('thresholdVal').textContent = currentThreshold.toFixed(1);
@@ -602,7 +448,6 @@ function render(firstLoad = false) {
 
   const probPct = prob !== null ? prob * 100 : null;
 
-  // Arc gauge + count-up on first load, instant update after
   const arcProbEl = document.getElementById('arcProbText');
   if (firstLoad && probPct !== null) {
     countUp(arcProbEl, probPct, '%', 2, 1000);
@@ -610,7 +455,6 @@ function render(firstLoad = false) {
     arcProbEl.textContent = probPct !== null ? probPct.toFixed(2) + '%' : 'n/a';
   }
 
-  // Also count up the big probability display in risk card (if re-used as arc text)
   updateArcGauge(prob);
 
   document.getElementById('returnPeriod').textContent =
@@ -621,10 +465,8 @@ function render(firstLoad = false) {
   bandEl.textContent = band.charAt(0).toUpperCase() + band.slice(1);
   bandEl.className = `risk-band-pill band-${band}`;
 
-  // Hero color shift
   updateHeroColor(band);
 
-  // Toast on band change (not on first load)
   if (!firstLoad && prevBand !== null && prevBand !== band && prob !== null) {
     showToast(`Risk level changed to ${band.toUpperCase()}`, band);
   }
@@ -638,12 +480,8 @@ function render(firstLoad = false) {
   updateTakeaway(prob, firstLoad);
   buildForecast(DATA);
   updateLiveComparison();
-  drawTimeline();
+  buildTimelineChart(DATA);
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 18. 7-DAY FORECAST                                          */
-/* ─────────────────────────────────────────────────────────── */
 
 function buildForecast(data) {
   const grid  = document.getElementById('forecastGrid');
@@ -677,10 +515,6 @@ function buildForecast(data) {
   if (note) note.textContent = `${modelLabel(currentModel)} projection · uncertainty widens by day`;
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 19. TAKEAWAY                                                */
-/* ─────────────────────────────────────────────────────────── */
-
 function updateTakeaway(prob, firstLoad = false) {
   const cs        = DATA.core_stats;
   const trend     = DATA.trend;
@@ -708,10 +542,6 @@ function updateTakeaway(prob, firstLoad = false) {
   }
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 20. MODEL TOGGLE                                            */
-/* ─────────────────────────────────────────────────────────── */
-
 function buildModelToggle(dfit) {
   const wrap = document.getElementById('modelToggle');
   wrap.innerHTML = '';
@@ -731,10 +561,6 @@ function buildModelToggle(dfit) {
     wrap.appendChild(btn);
   });
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 21. TABLES                                                  */
-/* ─────────────────────────────────────────────────────────── */
 
 function row(table, label, value, tooltip = null) {
   const tr = document.createElement('tr');
@@ -768,10 +594,6 @@ function buildStatsTable(data) {
   row(t, 'Shapiro-Wilk p-value',   `${cs.shapiro_wilk.p_value} (${cs.shapiro_wilk.is_normal_at_5pct ? 'Normal' : 'Not normal'} at 5%)`, "Tests if data is normally distributed. p > 0.05 means it follows a normal bell curve.");
   row(t, 'Sample size',            `${cs.n_days} days`);
 }
-
-/* ─────────────────────────────────────────────────────────── */
-/* 22. ASSUMPTIONS + SYNTHESIS                                 */
-/* ─────────────────────────────────────────────────────────── */
 
 function buildAssumptions(data) {
   const box   = document.getElementById('assumptions');
@@ -810,150 +632,133 @@ function buildSynthesis(data) {
   `;
 }
 
-/* ─────────────────────────────────────────────────────────── */
-/* 23. TIMELINE CANVAS                                         */
-/* ─────────────────────────────────────────────────────────── */
-
-function drawTimeline() {
-  if (!DATA) return;
+function buildTimelineChart(data) {
   const canvas = document.getElementById('timelineCanvas');
-  const dpr    = window.devicePixelRatio || 1;
-  const cssWidth  = Math.max(100, canvas.parentElement.clientWidth - 40);
-  const cssHeight = 280;
-  canvas.width  = cssWidth * dpr;
-  canvas.height = cssHeight * dpr;
-  canvas.style.width  = cssWidth + 'px';
-  canvas.style.height = cssHeight + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, cssWidth, cssHeight);
+  if (!canvas || typeof Chart === 'undefined') return;
 
-  const cs       = DATA.core_stats;
-  const trend    = DATA.trend;
-  const nDays    = cs.n_days;
+  const cs = data.core_stats;
+  const trend = data.trend;
+  const residuals = trend?.residuals || [];
+  const nDays = cs.n_days;
   const projDays = 7;
-  const total    = nDays + projDays;
-  const padL = 52, padR = 20, padT = 22, padB = 32;
-  const plotW = cssWidth - padL - padR;
-  const plotH = cssHeight - padT - padB;
+  const totalDays = nDays + projDays;
 
-  const panFrac     = document.getElementById('panSlider').value / 100;
-  const visibleSpan = Math.min(total, 30);
-  const maxStart    = total - visibleSpan;
-  const start       = Math.round(maxStart * panFrac);
-  const end         = start + visibleSpan;
+  // Windowing logic for the pan slider
+  const panSlider = document.getElementById('panSlider');
+  const panFrac = (panSlider ? parseFloat(panSlider.value) : 100) / 100;
+  const visibleSpan = Math.min(totalDays, 30); // show 30 days maximum
+  const maxStart = totalDays - visibleSpan;
+  const start = Math.round(maxStart * panFrac);
+  const end = start + visibleSpan;
 
-  const residuals  = trend?.residuals || [];
-  const meanLine   = i => cs.mean + trend.slope_c_per_day * (i - nDays / 2);
-  const actualVal  = i => meanLine(i) + (residuals[i] || 0);
-  const sd         = cs.std_dev;
+  const labels = Array.from({length: totalDays}, (_, i) => `Day ${i + 1}`).slice(start, end);
 
-  const yMin = cs.mean - 3.5 * sd;
-  const yMax = cs.mean + 4.2 * sd;
-  const xOf  = i => padL + ((i - start) / (visibleSpan - 1)) * plotW;
-  const yOf  = v => padT + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+  const recorded = [];
+  const projected = [];
+  const threshold = [];
 
-  // Theme-aware colours
+  for (let i = 0; i < totalDays; i++) {
+    const expected = cs.mean + trend.slope_c_per_day * (i - nDays / 2);
+    threshold.push(currentThreshold);
+
+    if (i < nDays) {
+      recorded.push(expected + (residuals[i] || 0));
+      projected.push(null);
+    } else {
+      if (i === nDays) {
+        const lastRec = expected - trend.slope_c_per_day + (residuals[nDays - 1] || 0);
+        recorded.push(null);
+        projected[nDays - 1] = lastRec;
+      }
+      projected.push(expected);
+    }
+  }
+
+  const slicedRecorded = recorded.slice(start, end);
+  const slicedProjected = projected.slice(start, end);
+  const slicedThreshold = threshold.slice(start, end);
+
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const gridCol  = isDark ? '#243547' : '#e3e8ed';
-  const textCol  = isDark ? '#506980' : '#7a8fa0';
-  const surfCol  = isDark ? '#182533' : '#ffffff';
+  const { tick, grid } = getChartColors(isDark);
 
-  // Horizontal grid lines + y-axis labels
-  [yMin, cs.mean - sd, cs.mean, cs.mean + sd, yMax].forEach(v => {
-    const y = yOf(v);
-    ctx.strokeStyle = gridCol; ctx.lineWidth = 1; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
-    ctx.fillStyle = textCol; ctx.font = '11px Inter, Segoe UI, sans-serif';
-    ctx.textAlign = 'right'; ctx.fillText(v.toFixed(1), padL - 6, y + 4);
+  if (timelineChart) timelineChart.destroy();
+
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, isDark ? 'rgba(41,128,185,0.6)' : 'rgba(41,128,185,0.3)');
+  gradient.addColorStop(1, 'rgba(41,128,185,0)');
+
+  timelineChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Recorded Temp',
+          data: slicedRecorded,
+          borderColor: '#2980b9',
+          backgroundColor: gradient,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: ctx => ctx.raw > currentThreshold ? '#e05a3a' : '#2980b9',
+          pointBorderColor: isDark ? '#1a2e3b' : '#fff',
+          pointBorderWidth: 1.5,
+          pointRadius: ctx => (ctx.raw > currentThreshold || ctx.dataIndex === slicedRecorded.length - 1) ? 5 : 0,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: ctx => ctx.raw > currentThreshold ? '#e05a3a' : '#2980b9'
+        },
+        {
+          label: 'Projected Mean',
+          data: slicedProjected,
+          borderColor: '#27ae60',
+          borderWidth: 2.5,
+          borderDash: [5, 5],
+          fill: false,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 5
+        },
+        {
+          label: 'Danger Threshold',
+          data: slicedThreshold,
+          borderColor: '#e05a3a',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          align: 'end',
+          labels: { color: tick, usePointStyle: true, boxWidth: 8, font: {family: 'Inter, sans-serif'} }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#fff' : '#1a2e3b',
+          titleColor: isDark ? '#1a2e3b' : '#fff',
+          bodyColor: isDark ? '#1a2e3b' : '#fff',
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            label: ctx => {
+              if (ctx.dataset.label === 'Danger Threshold') return null;
+              return ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)}°C`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tick, maxTicksLimit: 12, font: {family: 'Inter, sans-serif'} } },
+        y: { grid: { color: grid }, ticks: { color: tick, font: {family: 'Inter, sans-serif'}, callback: v => v + '°C' } }
+      }
+    }
   });
-
-  // Day tick marks + labels
-  const every = Math.ceil(visibleSpan / 7);
-  for (let i = start; i < end; i++) {
-    if ((i - start) % every !== 0) continue;
-    const x = xOf(i);
-    ctx.strokeStyle = isDark ? '#1a2e3d' : '#f2f4f6'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + plotH); ctx.stroke();
-    ctx.fillStyle = textCol; ctx.font = '10px Inter, Segoe UI, sans-serif';
-    ctx.textAlign = 'center'; ctx.fillText(`d${i + 1}`, x, padT + plotH + 20);
-  }
-
-  // Divider between recorded and projected
-  if (nDays >= start && nDays <= end) {
-    const divX = xOf(nDays - 1);
-    ctx.strokeStyle = isDark ? '#2a4560' : '#d0d8e0'; ctx.lineWidth = 1;
-    ctx.setLineDash([3, 4]);
-    ctx.beginPath(); ctx.moveTo(divX, padT); ctx.lineTo(divX, padT + plotH); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = textCol; ctx.font = '9px Inter, Segoe UI, sans-serif';
-    ctx.textAlign = 'center'; ctx.fillText('forecast →', divX + 28, padT + 14);
-  }
-
-  // ±2 SD uncertainty band (projection)
-  ctx.beginPath(); let started = false;
-  for (let i = Math.max(start, nDays - 1); i < end; i++) {
-    const dout = Math.max(0, i - nDays); const widen = 1 + dout * 0.15;
-    const v = Math.min(meanLine(i) + 2 * sd * widen, yMax);
-    if (!started) { ctx.moveTo(xOf(i), yOf(v)); started = true; } else ctx.lineTo(xOf(i), yOf(v));
-  }
-  for (let i = end - 1; i >= Math.max(start, nDays - 1); i--) {
-    const dout = Math.max(0, i - nDays); const widen = 1 + dout * 0.15;
-    ctx.lineTo(xOf(i), yOf(Math.max(meanLine(i) - 2 * sd * widen, yMin)));
-  }
-  ctx.closePath(); ctx.fillStyle = 'rgba(41,128,185,0.09)';
-  if (started) ctx.fill();
-
-  // Risk zone above threshold in projection
-  ctx.beginPath(); let rStarted = false;
-  for (let i = Math.max(start, nDays - 1); i < end; i++) {
-    const dout = Math.max(0, i - nDays); const widen = 1 + dout * 0.15;
-    const upper = meanLine(i) + 2 * sd * widen;
-    const x = xOf(i), y = yOf(Math.max(currentThreshold, Math.min(upper, yMax)));
-    if (!rStarted) { ctx.moveTo(x, y); rStarted = true; } else ctx.lineTo(x, y);
-  }
-  for (let i = end - 1; i >= Math.max(start, nDays - 1); i--) {
-    const dout = Math.max(0, i - nDays); const widen = 1 + dout * 0.15;
-    const upper = meanLine(i) + 2 * sd * widen;
-    ctx.lineTo(xOf(i), yOf(Math.min(upper, currentThreshold)));
-  }
-  ctx.closePath(); ctx.fillStyle = 'rgba(224,90,58,0.12)';
-  if (rStarted) ctx.fill();
-
-  // Threshold line
-  const thrY = yOf(currentThreshold);
-  ctx.strokeStyle = '#e05a3a'; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.8;
-  ctx.beginPath(); ctx.moveTo(padL, thrY); ctx.lineTo(padL + plotW, thrY); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = '#e05a3a'; ctx.font = 'bold 11px Inter, Segoe UI, sans-serif';
-  ctx.textAlign = 'right'; ctx.fillText(`${currentThreshold.toFixed(1)}°C`, padL + plotW, thrY - 7);
-
-  // Recorded data line
-  ctx.strokeStyle = '#2980b9'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
-  ctx.beginPath(); let s2 = false;
-  for (let i = start; i < Math.min(end, nDays); i++) {
-    const x = xOf(i), y = yOf(actualVal(i));
-    if (!s2) { ctx.moveTo(x, y); s2 = true; } else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-
-  // Data point dots
-  for (let i = start; i < Math.min(end, nDays); i++) {
-    const val = actualVal(i); const hot = val > currentThreshold;
-    ctx.beginPath();
-    ctx.fillStyle   = hot ? '#e05a3a' : surfCol;
-    ctx.strokeStyle = hot ? '#e05a3a' : '#2980b9';
-    ctx.lineWidth = 2;
-    ctx.arc(xOf(i), yOf(val), hot ? 5 : 3, 0, Math.PI * 2);
-    ctx.fill(); ctx.stroke();
-  }
-
-  // Projected mean line
-  ctx.strokeStyle = '#27ae60'; ctx.setLineDash([6, 4]); ctx.lineWidth = 2;
-  ctx.beginPath(); let s3 = false;
-  for (let i = Math.max(start, nDays - 1); i < end; i++) {
-    const x = xOf(i), y = yOf(meanLine(i));
-    if (!s3) { ctx.moveTo(x, y); s3 = true; } else ctx.lineTo(x, y);
-  }
-  ctx.stroke(); ctx.setLineDash([]);
 }
