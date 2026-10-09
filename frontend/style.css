@@ -396,6 +396,12 @@ canvas { display: block; }
   stroke-linecap: round;
 }
 
+.arc-tick {
+  stroke: rgba(255,255,255,.45);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
 .arc-fill {
   fill: none;
   stroke: url(#gaugeGradient);

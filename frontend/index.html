@@ -118,9 +118,9 @@
       <section class="section" id="overview">
         <div class="hero-band" id="heroBand">
           <div class="hero-text">
-            <p class="section-label hero-label">Extreme heat outlook</p>
+            <p class="section-label hero-label" id="heroLabel">Extreme heat outlook</p>
             <h1 class="hero-title">Know the heat<br><em>before it arrives.</em></h1>
-            <p class="hero-desc">A clear view of how often your chosen temperature is likely to be crossed, backed by four fitted probability models.</p>
+            <p class="hero-desc" id="heroDesc">A clear view of how often your chosen temperature is likely to be crossed, backed by four fitted probability models.</p>
           </div>
           <div class="hero-visual">
             <div class="risk-card" aria-live="polite">
@@ -138,7 +138,6 @@
                       <stop offset="42%"  stop-color="#e67e22"/>
                       <stop offset="100%" stop-color="#e05a3a"/>
                     </linearGradient>
-                    <!-- Tick marks at low/moderate/high boundaries -->
                   </defs>
                   <!-- Background track -->
                   <path class="arc-track" d="M 30 130 A 100 100 0 0 1 230 130"/>
@@ -146,8 +145,9 @@
                   <path class="arc-fill" id="arcFill" d="M 30 130 A 100 100 0 0 1 230 130"/>
                   <!-- Needle dot at tip of fill -->
                   <circle class="arc-needle" id="arcNeedle" cx="30" cy="130" r="7"/>
-                  <!-- Tick at 5% (low/moderate) -->
+                  <!-- Boundary ticks: low (5%) and moderate (15%) -->
                   <line class="arc-tick" x1="30" y1="130" x2="30" y2="130" id="tickLow"/>
+                  <line class="arc-tick" x1="30" y1="130" x2="30" y2="130" id="tickMod"/>
                   <!-- Center probability text -->
                   <text class="arc-prob-text" id="arcProbText" x="130" y="112" text-anchor="middle">—%</text>
                   <text class="arc-sub-text" x="130" y="132" text-anchor="middle">chance per day</text>
@@ -350,8 +350,8 @@
       </section>
 
       <footer class="app-footer">
-        <span>HeatSense · Frozen snapshot from <code>backend/output/results.json</code></span>
-        <span>Refresh after running the statistical pipeline</span>
+        <span id="footerMeta">HeatSense · Frozen snapshot from <code>backend/output/results.json</code></span>
+        <span id="footerSync">Refresh after running the statistical pipeline</span>
       </footer>
 
     </main>

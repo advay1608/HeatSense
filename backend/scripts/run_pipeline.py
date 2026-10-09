@@ -17,6 +17,7 @@ After execution, automatically syncs results to frontend/results.snapshot.json.
 
 import argparse
 import importlib
+import json
 import os
 import shutil
 import sys
@@ -72,7 +73,17 @@ def main():
             end_date=args.end_date,
         )
 
-    # Step 1 through 7: Sequential analytical pipeline execution
+    # Ensure dataset_info is present in results.json from dataset_metadata.json if available
+    meta_path = os.path.join(os.path.dirname(DATA_PATH), "dataset_metadata.json")
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, "r", encoding="utf-8") as f:
+                meta_data = json.load(f)
+                from common import write_result
+                write_result("dataset_info", meta_data)
+        except Exception as e:
+            print(f"Warning: Could not sync dataset_metadata.json: {e}")
+
     for step in PIPELINE:
         print(f"\n{'='*60}\nRunning {step}.py\n{'='*60}")
         module = importlib.import_module(step)

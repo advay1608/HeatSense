@@ -14,7 +14,7 @@ const ARC_R      = 100;
 const ARC_CX     = 130;
 const ARC_CY     = 130;
 const ARC_LEN    = Math.PI * ARC_R;
-const ARC_MAX_P  = 0.25;
+const ARC_MAX_P  = 0.50;
 
 fetch('./results.snapshot.json')
   .then(r => r.json())
@@ -74,7 +74,7 @@ function cdfFor(name, params, x) {
 }
 function probExceeds(name, params, threshold) {
   const p = cdfFor(name, params, threshold);
-  return p === null ? null : 1 - p;
+  return p === null ? null : Math.max(0, Math.min(1, 1 - p));
 }
 function modelLabel(name) {
   return ({normal:'Normal', lognorm:'Log-normal', gamma:'Gamma', gumbel_r:'Gumbel'})[name] || name;
@@ -178,13 +178,35 @@ function updateSliderGradient() {
   slider.style.background = `linear-gradient(90deg, var(--red) ${pct}%, var(--border) ${pct}%)`;
 }
 
+function initArcGaugeTicks() {
+  const tickLow = document.getElementById('tickLow');
+  const tickMod = document.getElementById('tickMod');
+  const bands = DATA?.synthesis?.risk_bands_reference;
+  const pLow = (bands && bands[0] && bands[0].max) || 0.05;
+  const pMod = (bands && bands[1] && bands[1].max) || 0.15;
+
+  function setTick(el, p) {
+    if (!el) return;
+    const frac = Math.min(Math.max(p / ARC_MAX_P, 0), 1);
+    const angle = Math.PI - frac * Math.PI;
+    const r1 = ARC_R - 8;
+    const r2 = ARC_R + 8;
+    el.setAttribute('x1', (ARC_CX + r1 * Math.cos(angle)).toFixed(1));
+    el.setAttribute('y1', (ARC_CY - r1 * Math.sin(angle)).toFixed(1));
+    el.setAttribute('x2', (ARC_CX + r2 * Math.cos(angle)).toFixed(1));
+    el.setAttribute('y2', (ARC_CY - r2 * Math.sin(angle)).toFixed(1));
+  }
+  setTick(tickLow, pLow);
+  setTick(tickMod, pMod);
+}
+
 function updateArcGauge(prob) {
   const arcFill   = document.getElementById('arcFill');
   const arcNeedle = document.getElementById('arcNeedle');
   const arcBand   = document.getElementById('arcBandText');
   if (!arcFill) return;
 
-  const fillFrac   = prob !== null ? Math.min(prob / ARC_MAX_P, 1) : 0;
+  const fillFrac   = prob !== null ? Math.max(0, Math.min(prob / ARC_MAX_P, 1)) : 0;
   const dashOffset = ARC_LEN * (1 - fillFrac);
 
   arcFill.style.strokeDasharray  = ARC_LEN;
@@ -262,7 +284,7 @@ function updateLiveComparison() {
   dfit.candidates.forEach(c => {
     const prob = probExceeds(c.name, c.params, currentThreshold);
     const pct  = prob !== null ? prob * 100 : null;
-    const fillW = prob !== null ? Math.min(prob / ARC_MAX_P, 1) * 100 : 0;
+    const fillW = prob !== null ? Math.min(prob * 100, 100) : 0;
     const isBest = c.name === dfit.best_model;
 
     const div = document.createElement('div');
@@ -270,7 +292,7 @@ function updateLiveComparison() {
     div.innerHTML = `
       <div class="live-comp-name">${modelLabel(c.name)}${isBest ? ' ★' : ''}</div>
       <div class="live-comp-prob">${pct !== null ? pct.toFixed(2) + '%' : '—'}</div>
-      <div class="live-comp-bar-track"><div class="live-comp-bar" style="width:${fillW}%"></div></div>
+      <div class="live-comp-bar-track"><div class="live-comp-bar" style="width:${fillW.toFixed(1)}%"></div></div>
       <div class="live-comp-aic">AIC ${c.aic} <span class="help-icon" data-tip="Akaike Information Criterion. Lower is better."><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg></span></div>
     `;
     grid.appendChild(div);
@@ -381,14 +403,46 @@ function init(data) {
   const endYear = data.dataset_info?.end_date ? data.dataset_info.end_date.slice(0, 4) : '';
   const spanStr = startYear && endYear ? ` (${startYear}–${endYear})` : '';
 
+  document.title = `${locName} — HeatSense Risk Dashboard`;
+
+  const heroLabel = document.getElementById('heroLabel');
+  if (heroLabel) heroLabel.textContent = `Extreme heat outlook · ${locName}`;
+
+  const heroDesc = document.getElementById('heroDesc');
+  if (heroDesc) {
+    heroDesc.textContent = `Historical risk based on ${data.core_stats.n_days.toLocaleString()} daily records from ${startYear || '1950'} to ${endYear || '2026'} in ${locName}, backed by live ECMWF ERA5 reanalysis and four fitted probability models.`;
+  }
+
   document.getElementById('metaLine').textContent =
     `${locName} · ${data.core_stats.n_days.toLocaleString()} days${spanStr} · best fit: ${modelLabel(dfit.best_model)}`;
   const tStatus = document.getElementById('topbarStatus');
   if (tStatus) tStatus.textContent = `${locName} · Live API`;
 
+  const footerMeta = document.getElementById('footerMeta');
+  if (footerMeta && data.dataset_info) {
+    footerMeta.innerHTML = `Data: <strong>${data.dataset_info.location_name}</strong> · ${data.dataset_info.source} (${data.dataset_info.start_date} to ${data.dataset_info.end_date}) · ${data.core_stats.n_days.toLocaleString()} continuous daily records`;
+  }
+  const footerSync = document.getElementById('footerSync');
+  if (footerSync) {
+    footerSync.innerHTML = `Dynamic snapshot from <code>backend/output/results.json</code>`;
+  }
+
+  initArcGaugeTicks();
+
   const slider = document.getElementById('thresholdSlider');
-  if (slider) {
+  if (slider && data.core_stats) {
+    const minVal = Math.floor(data.core_stats.min_temp !== undefined ? data.core_stats.min_temp : 20);
+    const maxVal = Math.ceil(data.core_stats.max_temp !== undefined ? data.core_stats.max_temp : 50);
+    slider.min = minVal;
+    slider.max = maxVal;
     slider.value = currentThreshold;
+
+    const bounds = document.querySelectorAll('.slider-bounds span');
+    if (bounds.length >= 2) {
+      bounds[0].textContent = slider.min + '°C';
+      bounds[1].textContent = slider.max + '°C';
+    }
+
     updateSliderGradient();
 
     slider.addEventListener('input', e => {
@@ -495,17 +549,45 @@ function buildForecast(data) {
   const cs    = data.core_stats;
   const trend = data.trend;
   const cards = [];
+  const baseSpread = cs.std_dev || 5.0;
 
   for (let day = 1; day <= 7; day++) {
     const idx      = cs.n_days + day - 1;
-    const expected = cs.mean + trend.slope_c_per_day * (idx - cs.n_days / 2);
-    const spread   = cand.params.scale * (1 + (day - 1) * 0.15);
-    const chance   = probExceeds(currentModel, cand.params, currentThreshold);
-    const isHot    = chance !== null && chance > 0.15;
+    const expected = (trend?.intercept_c !== undefined && trend?.slope_c_per_day !== undefined)
+      ? (trend.intercept_c + trend.slope_c_per_day * idx)
+      : (cs.mean + (trend?.slope_c_per_day || 0) * (idx - cs.n_days / 2));
+    const spread   = baseSpread * (1 + (day - 1) * 0.10);
+
+    // Compute dynamic day probability adapting to projected mean and spread
+    let dayParams = { ...cand.params };
+    if (currentModel === 'normal') {
+      dayParams.loc = expected;
+      dayParams.scale = spread;
+    } else if (currentModel === 'gumbel_r') {
+      dayParams.loc = expected - 0.5772156649 * spread;
+      dayParams.scale = spread * (Math.SQRT6 / Math.PI);
+    } else if (currentModel === 'lognorm') {
+      dayParams.loc = Math.max(0, expected - cand.params.scale);
+    } else if (currentModel === 'gamma') {
+      dayParams.loc = Math.max(0, expected - cand.params.a * cand.params.scale);
+    }
+
+    const chance = probExceeds(currentModel, dayParams, currentThreshold);
+    const isHot  = chance !== null && chance > 0.15;
+
+    // Real calendar date calculation
+    let dateLabel = `Day +${day}`;
+    if (data.dataset_info?.end_date) {
+      const parts = data.dataset_info.end_date.split('-');
+      if (parts.length === 3) {
+        const d = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2] + day));
+        dateLabel = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+      }
+    }
 
     cards.push(`
       <div class="forecast-day${isHot ? ' hot' : ''}">
-        <span class="forecast-day-label">Day +${day}</span>
+        <span class="forecast-day-label">${dateLabel}</span>
         <strong class="forecast-day-temp">${expected.toFixed(1)}°C</strong>
         <span class="forecast-day-range">${Math.max(0, expected - spread).toFixed(1)}–${(expected + spread).toFixed(1)}°C</span>
         <span class="forecast-day-prob">${chance !== null ? (chance * 100).toFixed(1) : '—'}% over threshold</span>
@@ -518,12 +600,20 @@ function buildForecast(data) {
 }
 
 function updateTakeaway(prob, firstLoad = false) {
-  const cs        = DATA.core_stats;
-  const trend     = DATA.trend;
-  const residuals = trend?.residuals || [];
-  const recorded  = residuals.map((r, i) => cs.mean + trend.slope_c_per_day * (i - cs.n_days / 2) + r);
+  const cs = DATA.core_stats;
+  const trend = DATA.trend;
+
+  // Cached array for instant threshold slider responsiveness
+  if (!DATA._recordedTemps) {
+    const residuals = trend?.residuals || [];
+    DATA._recordedTemps = residuals.map((r, i) => {
+      return (trend?.intercept_c !== undefined && trend?.slope_c_per_day !== undefined)
+        ? (trend.intercept_c + trend.slope_c_per_day * i + r)
+        : (cs.mean + (trend?.slope_c_per_day || 0) * (i - cs.n_days / 2) + r);
+    });
+  }
+  const recorded = DATA._recordedTemps;
   
-  // Safe aggregation that handles large datasets without call-stack overflow
   let crossings = 0;
   let peak = cs.max_temp !== undefined ? cs.max_temp : -Infinity;
   for (let i = 0; i < recorded.length; i++) {
@@ -588,30 +678,52 @@ function row(table, label, value, tooltip = null) {
 function buildComparisonTable(data) {
   const t = document.getElementById('comparisonTable');
   const sim = data.simulation;
+  const dfit = data.distribution_fit;
   t.innerHTML = '';
-  row(t, 'Theoretical (fitted model)',     (sim.comparison.theoretical   * 100).toFixed(2) + '%', "Probability calculated purely from the mathematical curve of the model.");
-  row(t, 'Monte Carlo (10,000 trials)',    (sim.comparison.monte_carlo_10k * 100).toFixed(2) + '%', "Probability generated by simulating 10,000 random futures.");
-  row(t, 'Bootstrap (real data)',          (sim.comparison.bootstrap      * 100).toFixed(2) + '%', "Probability found by resampling the actual recorded historical data.");
-  row(t, 'Return period',                 `1-in-${sim.return_period_days}-day event`, "The estimated average time between dangerous heat events.");
+  row(t, `Theoretical (${modelLabel(dfit.best_model)})`, (sim.comparison.theoretical * 100).toFixed(2) + '%', `Parametric exceedance probability under fitted ${modelLabel(dfit.best_model)} at canonical ${sim.threshold_c}°C.`);
+  row(t, 'Monte Carlo (10,000 trials)', (sim.comparison.monte_carlo_10k * 100).toFixed(2) + '%', `Simulated parametric sample of 10,000 synthetic days at ${sim.threshold_c}°C.`);
+  row(t, 'Bootstrap (non-parametric)', (sim.comparison.bootstrap * 100).toFixed(2) + '%', `Empirical resampling with replacement directly from ${data.core_stats.n_days.toLocaleString()} historical observations.`);
+  row(t, 'Return period (at canonical)', `1-in-${sim.return_period_days}-day event`, `The average expected recurrence interval for days exceeding ${sim.threshold_c}°C.`);
 }
 
 function buildStatsTable(data) {
   const t = document.getElementById('statsTable');
   const cs = data.core_stats;
   const info = data.dataset_info;
+  const trend = data.trend;
+  const dep = data.dependence;
   t.innerHTML = '';
+
   if (info) {
-    row(t, 'Location & Source', `${info.location_name} (Open-Meteo ERA5 API)`);
-    row(t, 'Observation Period', `${info.start_date} to ${info.end_date}`);
+    row(t, 'Location & Coordinates', `${info.location_name} (${info.latitude}°N, ${info.longitude}°E, alt. ${info.elevation_m || 214}m)`);
+    row(t, 'Data Source', `${info.source} · ECMWF ERA5 Reanalysis`);
+    row(t, 'Observation Period', `${info.start_date} to ${info.end_date} (${cs.n_days.toLocaleString()} continuous days)`);
+  } else {
+    row(t, 'Sample size', `${cs.n_days.toLocaleString()} consecutive days`);
   }
-  row(t, 'Sample size', `${cs.n_days.toLocaleString()} consecutive days`);
   row(t, 'Historical Mean', `${cs.mean}°C  (95% CI ${cs.mean_ci95[0]}–${cs.mean_ci95[1]})`);
+  if (cs.median_temp !== undefined && cs.iqr !== undefined) {
+    row(t, 'Median & IQR', `${cs.median_temp}°C (IQR: ${cs.iqr}°C)`);
+  }
   if (cs.min_temp !== undefined && cs.max_temp !== undefined) {
-    row(t, 'Recorded Range', `${cs.min_temp}°C (min) to ${cs.max_temp}°C (all-time peak)`);
+    row(t, 'All-Time Record Range', `${cs.min_temp}°C (min) to ${cs.max_temp}°C (peak record)`);
   }
   row(t, 'Std. deviation', `${cs.std_dev}°C  (95% CI ${cs.std_dev_ci95[0]}–${cs.std_dev_ci95[1]})`, "Average amount temperatures vary from the mean. Higher means more volatile.");
   row(t, 'Coeff. of variation', `${cs.cv_percent}%  (95% CI ${cs.cv_percent_ci95[0]}–${cs.cv_percent_ci95[1]})`, "Ratio of the standard deviation to the mean. Measures overall relative volatility.");
-  row(t, 'Normality check', `${cs.shapiro_wilk.is_normal_at_5pct ? 'Normal' : 'Non-Normal'} (p=${cs.shapiro_wilk.p_value})`, "Statistical tests show non-normality due to distinct seasonal patterns.");
+  
+  if (trend) {
+    const slopeDecade = trend.slope_c_per_decade;
+    row(t, 'Long-Term Drift Slope', `${slopeDecade > 0 ? '+' : ''}${slopeDecade}°C / decade`, "Estimated decadal temperature rate of change via OLS linear regression.");
+    row(t, 'Total Drift over Period', `${trend.total_drift_c > 0 ? '+' : ''}${trend.total_drift_c}°C (p=${trend.slope_p_value})`, trend.practical_note);
+  }
+  if (dep) {
+    row(t, 'Serial Dependence (Lag-1)', `ρ₁ = ${dep.lag1_autocorrelation} (Weekly ρ₇ = ${dep.multilag_autocorrelations?.lag_7 || '—'})`, "Lag-1 daily temperature autocorrelation.");
+    row(t, 'Heatwave Cluster Share', `${dep.pct_extreme_days_in_multiday_clusters}% in multi-day runs`, "Percentage of extreme days occurring in runs of 2+ days.");
+    if (dep.transition_probabilities) {
+      row(t, 'Markov Transition P(Hot|Hot)', `${(dep.transition_probabilities.p_hot_tomorrow_given_hot_today * 100).toFixed(1)}% (vs Base ${(dep.transition_probabilities.unconditional_base_probability * 100).toFixed(1)}%)`, "Probability of another hot day given today is hot.");
+    }
+  }
+  row(t, 'Normality check', `${cs.shapiro_wilk.is_normal_at_5pct ? 'Normal' : 'Non-Normal'} (p=${cs.shapiro_wilk.p_value})`, cs.shapiro_wilk.note || "Statistical tests show non-normality due to distinct seasonal patterns.");
 }
 
 function buildAssumptions(data) {
@@ -623,7 +735,7 @@ function buildAssumptions(data) {
   const items = [
     { ok: !trend.is_statistically_significant || Math.abs(trend.total_drift_c || 0) < 1, text: `Stationarity — ${trend.practical_note}` },
     { ok: !dep.is_significant, text: `Independence — ${dep.interpretation}` },
-    { ok: true, text: `Model adequacy — best fit is ${modelLabel(df.best_model)} (AIC-selected, holdout-validated); Q-Q R=${df.qq_plot_r_value}.` }
+    { ok: true, text: `Model adequacy — best fit is ${modelLabel(df.best_model)} (AIC: ${df.candidates.find(c => c.name === df.best_model)?.aic}, holdout test log-lik: ${df.holdout_validation?.best_model_test_log_likelihood ?? '—'}); Q-Q R=${df.qq_plot_r_value}.` }
   ];
 
   box.innerHTML = '';
@@ -672,41 +784,45 @@ function buildTimelineChart(data) {
 
   const datesList = trend?.dates || [];
   const labels = [];
+  const slicedRecorded = [];
+  const slicedProjected = [];
+  const slicedThreshold = [];
+
   for (let i = start; i < end; i++) {
     if (i < nDays && datesList[i]) {
-      const d = new Date(datesList[i]);
+      const d = new Date(datesList[i] + 'T00:00:00Z');
       labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }));
     } else if (i < nDays) {
       labels.push(`Day ${i + 1}`);
     } else {
-      labels.push(`+${i - nDays + 1}d Proj`);
+      if (datesList.length && datesList[datesList.length - 1]) {
+        const parts = datesList[datesList.length - 1].split('-');
+        const projDate = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2] + (i - nDays + 1)));
+        labels.push(projDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' (proj)');
+      } else {
+        labels.push(`+${i - nDays + 1}d Proj`);
+      }
     }
-  }
 
-  const recorded = [];
-  const projected = [];
-  const threshold = [];
-
-  for (let i = 0; i < totalDays; i++) {
-    const expected = cs.mean + trend.slope_c_per_day * (i - nDays / 2);
-    threshold.push(currentThreshold);
+    slicedThreshold.push(currentThreshold);
+    const expected = (trend?.intercept_c !== undefined && trend?.slope_c_per_day !== undefined)
+      ? (trend.intercept_c + trend.slope_c_per_day * i)
+      : (cs.mean + (trend?.slope_c_per_day || 0) * (i - nDays / 2));
 
     if (i < nDays) {
-      recorded.push(expected + (residuals[i] || 0));
-      projected.push(null);
+      slicedRecorded.push(expected + (residuals[i] || 0));
+      slicedProjected.push(null);
     } else {
-      if (i === nDays) {
-        const lastRec = expected - trend.slope_c_per_day + (residuals[nDays - 1] || 0);
-        recorded.push(null);
-        projected[nDays - 1] = lastRec;
-      }
-      projected.push(expected);
+      slicedRecorded.push(null);
+      slicedProjected.push(expected);
     }
   }
 
-  const slicedRecorded = recorded.slice(start, end);
-  const slicedProjected = projected.slice(start, end);
-  const slicedThreshold = threshold.slice(start, end);
+  // Connect projected line to last recorded point if in window
+  if (start <= nDays - 1 && end > nDays) {
+    const lastRecIdx = nDays - 1 - start;
+    slicedProjected[lastRecIdx] = slicedRecorded[lastRecIdx];
+  }
 
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const { tick, grid } = getChartColors(isDark);
