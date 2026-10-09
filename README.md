@@ -94,7 +94,7 @@ heat-risk-project/
 - [ ] Real dataset sourced and cleaned (Person 3)
 - [ ] Core stats + uncertainty (Person 1)
 - [ ] Distribution fitting + model selection (Person 1)
-- [ ] Simulation + bootstrap probability (Person 5)
+- [x] Simulation + bootstrap probability (Person 5)
 - [ ] Trend analysis (Person 6)
 - [ ] Dependence/clustering analysis (Person 7)
 - [ ] Synthesis / Heat Risk Index (Person 1)

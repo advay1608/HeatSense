@@ -110,7 +110,7 @@
       "monte_carlo_10k": 0.0847,
       "bootstrap": 0.0669
     },
-    "return_period_days": 11.4,
+    "return_period_days": 11.8,
     "threshold_sensitivity": {
       "thresholds_c": [
         33.0,
