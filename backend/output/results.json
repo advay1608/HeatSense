@@ -84285,10 +84285,26 @@
     "lag1_autocorrelation": 0.9745,
     "is_significant": true,
     "significance_bound": 0.0117,
+    "multilag_autocorrelations": {
+      "lag_1": 0.9745,
+      "lag_2": 0.949,
+      "lag_3": 0.9292,
+      "lag_5": 0.9031,
+      "lag_7": 0.8854,
+      "lag_14": 0.8313
+    },
     "max_run_length_above_threshold": 95,
     "mean_run_length_above_threshold": 10.42,
+    "median_run_length_above_threshold": 4.0,
     "n_exceedance_runs": 610,
-    "interpretation": "Extreme days show clustering (lag-1 autocorrelation=0.97, longest run=95 consecutive days). Per-day probability underestimates real-world heatwave risk \u2014 extreme conditions tend to persist once they start."
+    "total_extreme_days": 6357,
+    "pct_extreme_days_in_multiday_clusters": 97.6,
+    "transition_probabilities": {
+      "unconditional_base_probability": 0.2267,
+      "p_hot_tomorrow_given_hot_today": 0.904,
+      "p_hot_tomorrow_given_cool_today": 0.0281
+    },
+    "interpretation": "Extreme days show severe serial clustering (lag-1 autocorrelation=0.97, longest run=95 consecutive days, mean run=10.4 days). Crucially, P(Hot tomorrow | Hot today) = 90.4%, versus just 2.8% if today is cool. Over 97.6% of extreme days occur as part of multi-day heatwaves, proving extreme heat is persistent, not isolated."
   },
   "synthesis": {
     "heat_risk_index": 0.2896,
