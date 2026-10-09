@@ -143,8 +143,15 @@
   "trend": {
     "slope_c_per_day": -2e-05,
     "slope_c_per_decade": -0.085,
+    "slope_stderr": 5e-06,
+    "slope_ci95": [
+      -3.3e-05,
+      -1.3e-05
+    ],
+    "intercept_c": 31.141,
     "slope_p_value": 0.0,
     "r_squared": 0.00076,
+    "degrees_of_freedom": 28037,
     "is_statistically_significant": true,
     "total_drift_c": -0.65,
     "practical_note": "Slope statistically significant (p=0.000) but total drift over the window is only -0.65C \u2014 practically small.",
