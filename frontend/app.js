@@ -34,7 +34,11 @@ function erf(x) {
   return sign * (1 - (((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x));
 }
 function normalCDF(x, loc, scale) { return 0.5 * (1 + erf((x - loc) / (scale * Math.SQRT2))); }
-function lognormCDF(x, s, loc, scale) { return x - loc <= 0 ? 0 : normalCDF(Math.log(x - loc), Math.log(scale), s); }
+function lognormCDF(x, s, loc, scale) {
+  if (x - loc <= 0) return 0;
+  if (!s || s <= 0) return x >= scale + loc ? 1 : 0;
+  return normalCDF(Math.log(x - loc), Math.log(scale), s);
+}
 function gumbelCDF(x, loc, scale) { return Math.exp(-Math.exp(-(x - loc) / scale)); }
 
 function gammaln(x) {
@@ -100,7 +104,9 @@ function countUp(el, target, suffix = '', decimals = 2, duration = 900) {
 }
 
 function initDarkMode() {
-  const saved      = localStorage.getItem('heatsense-theme');
+  const urlParams  = new URLSearchParams(window.location.search);
+  const themeParam = urlParams.get('theme');
+  const saved      = themeParam || localStorage.getItem('heatsense-theme');
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const isDark     = saved ? saved === 'dark' : prefersDark;
   applyDarkMode(isDark, false);
@@ -367,9 +373,10 @@ function buildAicChart(data) {
   const labels = dfit.candidates.map(c => modelLabel(c.name));
   const aics   = dfit.candidates.map(c => c.aic);
   const minAic = Math.min(...aics);
+  const deltaAics = aics.map(a => +(a - minAic).toFixed(2));
 
   const colors = dfit.candidates.map(c =>
-    c.name === dfit.best_model ? 'rgba(41,128,185,.85)' : 'rgba(122,143,160,.45)'
+    c.name === dfit.best_model ? 'rgba(41,128,185,.85)' : 'rgba(122,143,160,.55)'
   );
   const borders = dfit.candidates.map(c =>
     c.name === dfit.best_model ? 'rgb(41,128,185)' : 'rgb(122,143,160)'
@@ -378,16 +385,43 @@ function buildAicChart(data) {
   if (aicChart) aicChart.destroy();
   aicChart = new Chart(canvas, {
     type: 'bar',
-    data: { labels, datasets: [{ label: 'AIC score', data: aics, backgroundColor: colors, borderColor: borders, borderWidth: 2, borderRadius: 6, borderSkipped: false }] },
+    data: {
+      labels,
+      datasets: [{
+        label: 'ΔAIC Penalty (0 = Best Fit)',
+        data: deltaAics,
+        backgroundColor: colors,
+        borderColor: borders,
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ` AIC: ${ctx.parsed.y.toFixed(2)}${ctx.parsed.y === minAic ? ' ← best fit' : ''}` } }
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const raw = aics[ctx.dataIndex];
+              const delta = ctx.parsed.y;
+              return delta === 0
+                ? ` ΔAIC: 0.00 (Best fit! Raw AIC: ${raw.toLocaleString()})`
+                : ` ΔAIC: +${delta.toFixed(2)} penalty (Raw AIC: ${raw.toLocaleString()})`;
+            }
+          }
+        }
       },
       scales: {
         x: { grid: { display: false }, ticks: { color: tick, font: { size: 12, family: 'Inter, sans-serif' } } },
-        y: { grid: { color: grid }, min: Math.floor(minAic - 10), ticks: { color: tick, font: { size: 11, family: 'Inter, sans-serif' } }, title: { display: true, text: 'AIC (lower = better fit)', color: tick, font: { size: 11, family: 'Inter, sans-serif' } } }
+        y: {
+          grid: { color: grid },
+          beginAtZero: true,
+          ticks: { color: tick, font: { size: 11, family: 'Inter, sans-serif' }, callback: v => '+' + v },
+          title: { display: true, text: 'ΔAIC penalty relative to best model (lower = better)', color: tick, font: { size: 11, family: 'Inter, sans-serif' } }
+        }
       }
     }
   });
@@ -395,8 +429,12 @@ function buildAicChart(data) {
 
 function init(data) {
   const dfit = data.distribution_fit;
-  currentModel    = dfit.best_model;
-  currentThreshold = dfit.threshold_c;
+  const urlParams = new URLSearchParams(window.location.search);
+  const qModel    = urlParams.get('model');
+  const qThresh   = parseFloat(urlParams.get('threshold'));
+
+  currentModel    = (qModel && dfit.candidates.some(c => c.name === qModel)) ? qModel : dfit.best_model;
+  currentThreshold = (!isNaN(qThresh) && qThresh >= 10 && qThresh <= 60) ? qThresh : dfit.threshold_c;
 
   const locName = data.dataset_info?.location_name || 'Urban Station';
   const startYear = data.dataset_info?.start_date ? data.dataset_info.start_date.slice(0, 4) : '';
@@ -505,9 +543,7 @@ function render(firstLoad = false) {
   const probPct = prob !== null ? prob * 100 : null;
 
   const arcProbEl = document.getElementById('arcProbText');
-  if (firstLoad && probPct !== null) {
-    countUp(arcProbEl, probPct, '%', 2, 1000);
-  } else if (arcProbEl) {
+  if (arcProbEl) {
     arcProbEl.textContent = probPct !== null ? probPct.toFixed(2) + '%' : 'n/a';
   }
 
@@ -547,49 +583,75 @@ function buildForecast(data) {
   if (!cand) return;
 
   const cs    = data.core_stats;
-  const trend = data.trend;
-  const cards = [];
   const baseSpread = cs.std_dev || 5.0;
+  const cards = [];
 
-  for (let day = 1; day <= 7; day++) {
-    const idx      = cs.n_days + day - 1;
-    const expected = (trend?.intercept_c !== undefined && trend?.slope_c_per_day !== undefined)
-      ? (trend.intercept_c + trend.slope_c_per_day * idx)
-      : (cs.mean + (trend?.slope_c_per_day || 0) * (idx - cs.n_days / 2));
-    const spread   = baseSpread * (1 + (day - 1) * 0.10);
+  const backendDays = data.forecast?.days;
+  const dayCount = (backendDays && backendDays.length) ? backendDays.length : 7;
 
-    // Compute dynamic day probability adapting to projected mean and spread
-    let dayParams = { ...cand.params };
+  for (let day = 1; day <= dayCount; day++) {
+    let expected, spread, minProj, maxProj, dateLabel;
+
+    if (backendDays && backendDays[day - 1]) {
+      const bDay = backendDays[day - 1];
+      expected = bDay.expected_c;
+      spread = bDay.spread_c;
+      minProj = bDay.min_projected_c;
+      maxProj = bDay.max_projected_c;
+      if (bDay.date) {
+        const parts = bDay.date.split('-');
+        if (parts.length === 3) {
+          const d = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2]));
+          dateLabel = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+        }
+      }
+    } else {
+      const idx = cs.n_days + day - 1;
+      const trend = data.trend;
+      expected = (trend?.intercept_c !== undefined && trend?.slope_c_per_day !== undefined)
+        ? (trend.intercept_c + trend.slope_c_per_day * idx)
+        : (cs.mean + (trend?.slope_c_per_day || 0) * (idx - cs.n_days / 2));
+      spread = baseSpread * (1 + (day - 1) * 0.10);
+      minProj = Math.max(0, expected - spread);
+      maxProj = expected + spread;
+    }
+
+    if (!dateLabel) {
+      if (data.dataset_info?.end_date) {
+        const parts = data.dataset_info.end_date.split('-');
+        if (parts.length === 3) {
+          const d = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2] + day));
+          dateLabel = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+        }
+      } else {
+        dateLabel = `Day +${day}`;
+      }
+    }
+
+    // Dynamic exceedance probability for this day under the currently selected model
+    let dayParams = {};
     if (currentModel === 'normal') {
-      dayParams.loc = expected;
-      dayParams.scale = spread;
+      dayParams = { loc: expected, scale: spread };
     } else if (currentModel === 'gumbel_r') {
-      dayParams.loc = expected - 0.5772156649 * spread;
-      dayParams.scale = spread * (Math.SQRT6 / Math.PI);
+      const gScale = spread * (Math.sqrt(6) / Math.PI);
+      dayParams = { loc: expected - 0.5772156649 * gScale, scale: gScale };
     } else if (currentModel === 'lognorm') {
-      dayParams.loc = Math.max(0, expected - cand.params.scale);
+      const s = cand.params.s || 0.22;
+      const lnScale = expected * Math.exp(-0.5 * s * s);
+      dayParams = { s: s, loc: 0, scale: lnScale };
     } else if (currentModel === 'gamma') {
-      dayParams.loc = Math.max(0, expected - cand.params.a * cand.params.scale);
+      const a = cand.params.a || 20.0;
+      dayParams = { a: a, loc: 0, scale: expected / a };
     }
 
     const chance = probExceeds(currentModel, dayParams, currentThreshold);
     const isHot  = chance !== null && chance > 0.15;
 
-    // Real calendar date calculation
-    let dateLabel = `Day +${day}`;
-    if (data.dataset_info?.end_date) {
-      const parts = data.dataset_info.end_date.split('-');
-      if (parts.length === 3) {
-        const d = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2] + day));
-        dateLabel = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-      }
-    }
-
     cards.push(`
       <div class="forecast-day${isHot ? ' hot' : ''}">
         <span class="forecast-day-label">${dateLabel}</span>
         <strong class="forecast-day-temp">${expected.toFixed(1)}°C</strong>
-        <span class="forecast-day-range">${Math.max(0, expected - spread).toFixed(1)}–${(expected + spread).toFixed(1)}°C</span>
+        <span class="forecast-day-range">${minProj.toFixed(1)}–${maxProj.toFixed(1)}°C</span>
         <span class="forecast-day-prob">${chance !== null ? (chance * 100).toFixed(1) : '—'}% over threshold</span>
       </div>
     `);
@@ -634,13 +696,8 @@ function updateTakeaway(prob, firstLoad = false) {
   const crossEl = document.getElementById('observedCrossings');
   const peakEl  = document.getElementById('observedPeak');
 
-  if (firstLoad) {
-    countUp(crossEl, crossings, `/${cs.n_days.toLocaleString()}`, 0, 600);
-    countUp(peakEl,  peak, '°C', 1, 700);
-  } else {
-    if (crossEl) crossEl.textContent = `${crossings.toLocaleString()}/${cs.n_days.toLocaleString()}`;
-    if (peakEl)  peakEl.textContent  = `${peak.toFixed(1)}°C`;
-  }
+  if (crossEl) crossEl.textContent = `${crossings.toLocaleString()}/${cs.n_days.toLocaleString()}`;
+  if (peakEl)  peakEl.textContent  = `${peak.toFixed(1)}°C`;
 }
 
 function buildModelToggle(dfit) {
@@ -805,16 +862,22 @@ function buildTimelineChart(data) {
     }
 
     slicedThreshold.push(currentThreshold);
-    const expected = (trend?.intercept_c !== undefined && trend?.slope_c_per_day !== undefined)
-      ? (trend.intercept_c + trend.slope_c_per_day * i)
-      : (cs.mean + (trend?.slope_c_per_day || 0) * (i - nDays / 2));
 
     if (i < nDays) {
+      const expected = (trend?.intercept_c !== undefined && trend?.slope_c_per_day !== undefined)
+        ? (trend.intercept_c + trend.slope_c_per_day * i)
+        : (cs.mean + (trend?.slope_c_per_day || 0) * (i - nDays / 2));
       slicedRecorded.push(expected + (residuals[i] || 0));
       slicedProjected.push(null);
     } else {
+      const projIdx = i - nDays;
+      const forecastVal = (data.forecast?.days && data.forecast.days[projIdx])
+        ? data.forecast.days[projIdx].expected_c
+        : ((trend?.intercept_c !== undefined && trend?.slope_c_per_day !== undefined)
+            ? (trend.intercept_c + trend.slope_c_per_day * i)
+            : cs.mean);
       slicedRecorded.push(null);
-      slicedProjected.push(expected);
+      slicedProjected.push(forecastVal);
     }
   }
 

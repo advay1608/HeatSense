@@ -27,10 +27,14 @@ CANDIDATES = {
 }
 
 
-def fit_and_score(dist, data: np.ndarray) -> dict:
-    params = dist.fit(data)
-    log_likelihood = np.sum(dist.logpdf(data, *params))
-    k = len(params)
+def fit_and_score(name: str, dist, data: np.ndarray) -> dict:
+    if name in ["lognorm", "gamma"] and data.min() > 0:
+        params = dist.fit(data, floc=0)
+        k = len(params) - 1
+    else:
+        params = dist.fit(data)
+        k = len(params)
+    log_likelihood = float(np.sum(dist.logpdf(data, *params)))
     n = len(data)
     aic = 2 * k - 2 * log_likelihood
     bic = k * np.log(n) - 2 * log_likelihood
@@ -40,14 +44,14 @@ def fit_and_score(dist, data: np.ndarray) -> dict:
 def params_to_dict(dist_name: str, params: tuple) -> dict:
     """Best-effort readable param names per distribution; falls back to generic."""
     if dist_name == "normal":
-        return {"loc": round(params[0], 4), "scale": round(params[1], 4)}
+        return {"loc": round(float(params[0]), 4), "scale": round(float(params[1]), 4)}
     if dist_name == "gumbel_r":
-        return {"loc": round(params[0], 4), "scale": round(params[1], 4)}
+        return {"loc": round(float(params[0]), 4), "scale": round(float(params[1]), 4)}
     if dist_name == "lognorm":
-        return {"s": round(params[0], 4), "loc": round(params[1], 4), "scale": round(params[2], 4)}
+        return {"s": round(float(params[0]), 4), "loc": round(float(params[1]), 4), "scale": round(float(params[2]), 4)}
     if dist_name == "gamma":
-        return {"a": round(params[0], 4), "loc": round(params[1], 4), "scale": round(params[2], 4)}
-    return {"raw": [round(p, 4) for p in params]}
+        return {"a": round(float(params[0]), 4), "loc": round(float(params[1]), 4), "scale": round(float(params[2]), 4)}
+    return {"raw": [round(float(p), 4) for p in params]}
 
 
 def holdout_validation(temps: np.ndarray, best_name: str, runner_up_name: str,
@@ -59,7 +63,10 @@ def holdout_validation(temps: np.ndarray, best_name: str, runner_up_name: str,
 
     def test_ll(name):
         dist = CANDIDATES[name]
-        params = dist.fit(train)
+        if name in ["lognorm", "gamma"] and train.min() > 0:
+            params = dist.fit(train, floc=0)
+        else:
+            params = dist.fit(train)
         return float(np.sum(dist.logpdf(test, *params)))
 
     return {
@@ -75,7 +82,7 @@ def main():
 
     scored = {}
     for name, dist in CANDIDATES.items():
-        scored[name] = fit_and_score(dist, temps)
+        scored[name] = fit_and_score(name, dist, temps)
 
     candidates_out = []
     for name, s in scored.items():

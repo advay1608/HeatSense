@@ -59,24 +59,24 @@
       {
         "name": "lognorm",
         "params": {
-          "s": 0.0,
-          "loc": -2097139.7,
-          "scale": 2097170.5154
+          "s": 0.2341,
+          "loc": 0.0,
+          "scale": 30.0187
         },
-        "aic": 187044.02,
-        "bic": 187068.75,
-        "log_likelihood": -93519.01
+        "aic": 188915.0,
+        "bic": 188931.48,
+        "log_likelihood": -94455.5
       },
       {
         "name": "gamma",
         "params": {
-          "a": 914.0794,
-          "loc": -175.4848,
-          "scale": 0.2257
+          "a": 19.2531,
+          "loc": 0.0,
+          "scale": 1.6005
         },
-        "aic": 187107.51,
-        "bic": 187132.24,
-        "log_likelihood": -93550.76
+        "aic": 187897.84,
+        "bic": 187914.32,
+        "log_likelihood": -93946.92
       },
       {
         "name": "gumbel_r",
@@ -94,7 +94,7 @@
       "train_size": 22431,
       "test_size": 5608,
       "best_model_test_log_likelihood": -18702.745,
-      "runner_up_test_log_likelihood": -18702.751
+      "runner_up_test_log_likelihood": -18785.43
     },
     "qq_plot_r_value": 0.993,
     "theoretical_probability": 0.2228
@@ -84351,5 +84351,69 @@
     "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
     "fetched_at": "2026-10-09T12:25:42.285938Z",
     "description": "National Capital Region experiencing intense Urban Heat Island (UHI) dynamics and extreme summer heatwaves."
+  },
+  "forecast": {
+    "anchor_date": "2026-10-07",
+    "anchor_temp_c": 34.7,
+    "recent_trend_c_per_day": 0.428,
+    "persistence_rho": 0.9745,
+    "days": [
+      {
+        "day": 1,
+        "date": "2026-10-08",
+        "expected_c": 35.0,
+        "spread_c": 1.7,
+        "min_projected_c": 33.2,
+        "max_projected_c": 36.7
+      },
+      {
+        "day": 2,
+        "date": "2026-10-09",
+        "expected_c": 35.1,
+        "spread_c": 2.5,
+        "min_projected_c": 32.5,
+        "max_projected_c": 37.6
+      },
+      {
+        "day": 3,
+        "date": "2026-10-10",
+        "expected_c": 35.1,
+        "spread_c": 3.2,
+        "min_projected_c": 31.9,
+        "max_projected_c": 38.3
+      },
+      {
+        "day": 4,
+        "date": "2026-10-11",
+        "expected_c": 35.1,
+        "spread_c": 3.7,
+        "min_projected_c": 31.4,
+        "max_projected_c": 38.8
+      },
+      {
+        "day": 5,
+        "date": "2026-10-12",
+        "expected_c": 35.0,
+        "spread_c": 4.2,
+        "min_projected_c": 30.8,
+        "max_projected_c": 39.3
+      },
+      {
+        "day": 6,
+        "date": "2026-10-13",
+        "expected_c": 34.9,
+        "spread_c": 4.7,
+        "min_projected_c": 30.2,
+        "max_projected_c": 39.6
+      },
+      {
+        "day": 7,
+        "date": "2026-10-14",
+        "expected_c": 34.8,
+        "spread_c": 5.1,
+        "min_projected_c": 29.7,
+        "max_projected_c": 39.9
+      }
+    ]
   }
 }

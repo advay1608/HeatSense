@@ -81,6 +81,48 @@ def main():
     print(f"Trend adjustment: {trend_adjustment:.4f}  Clustering adjustment: {clustering_adjustment:.4f}")
     print(f"Heat Risk Index: {result['heat_risk_index']}  ->  Band: {risk_band}")
 
+    # 7-Day Autoregressive Weather Forecast (combining Person 6 trend & Person 7 AR(1) dependence)
+    import numpy as np
+    import pandas as pd
+    from common import load_dataset
+    df = load_dataset()
+    temps = df["max_temp_c"].to_numpy()
+    dates = df["date"]
+    last_date = dates.iloc[-1]
+    last_temp = float(temps[-1])
+
+    # Recent 14-day momentum slope
+    window = min(14, len(temps))
+    recent_slope = float(np.polyfit(np.arange(window), temps[-window:], 1)[0])
+
+    rho = float(dep.get("lag1_autocorrelation", 0.95))
+    mu = float(results["core_stats"]["mean"])
+    std_dev = float(results["core_stats"]["std_dev"])
+
+    forecast_days = []
+    for k in range(1, 8):
+        proj_date = last_date + pd.Timedelta(days=k)
+        # AR(1) mean reversion anchored to last observed temperature + seasonal momentum damping
+        expected_t = mu + (rho ** k) * (last_temp - mu) + k * recent_slope * np.exp(-k / 5.0)
+        spread = std_dev * np.sqrt(max(0.05, 1.0 - (rho ** (2 * k)))) + k * 0.20
+        forecast_days.append({
+            "day": k,
+            "date": proj_date.strftime("%Y-%m-%d"),
+            "expected_c": round(float(expected_t), 1),
+            "spread_c": round(float(spread), 1),
+            "min_projected_c": round(float(max(0.0, expected_t - spread)), 1),
+            "max_projected_c": round(float(expected_t + spread), 1),
+        })
+
+    forecast_data = {
+        "anchor_date": last_date.strftime("%Y-%m-%d"),
+        "anchor_temp_c": round(last_temp, 1),
+        "recent_trend_c_per_day": round(recent_slope, 3),
+        "persistence_rho": round(rho, 4),
+        "days": forecast_days,
+    }
+    write_result("forecast", forecast_data)
+
     write_result("synthesis", result)
     return result
 
