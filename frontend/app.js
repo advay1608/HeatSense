@@ -376,13 +376,15 @@ function init(data) {
   currentModel    = dfit.best_model;
   currentThreshold = dfit.threshold_c;
 
-  const generatedAt = data._meta?.generated_at
-    ? new Date(data._meta.generated_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
-    : 'snapshot';
+  const locName = data.dataset_info?.location_name || 'Urban Station';
+  const startYear = data.dataset_info?.start_date ? data.dataset_info.start_date.slice(0, 4) : '';
+  const endYear = data.dataset_info?.end_date ? data.dataset_info.end_date.slice(0, 4) : '';
+  const spanStr = startYear && endYear ? ` (${startYear}–${endYear})` : '';
+
   document.getElementById('metaLine').textContent =
-    `${data.core_stats.n_days} days · best fit: ${modelLabel(dfit.best_model)} · ${generatedAt}`;
+    `${locName} · ${data.core_stats.n_days.toLocaleString()} days${spanStr} · best fit: ${modelLabel(dfit.best_model)}`;
   const tStatus = document.getElementById('topbarStatus');
-  if (tStatus) tStatus.textContent = generatedAt;
+  if (tStatus) tStatus.textContent = `${locName} · Live API`;
 
   const slider = document.getElementById('thresholdSlider');
   if (slider) {
@@ -520,24 +522,33 @@ function updateTakeaway(prob, firstLoad = false) {
   const trend     = DATA.trend;
   const residuals = trend?.residuals || [];
   const recorded  = residuals.map((r, i) => cs.mean + trend.slope_c_per_day * (i - cs.n_days / 2) + r);
-  const crossings = recorded.filter(v => v > currentThreshold).length;
-  const peak      = recorded.length > 0 ? Math.max(...recorded) : cs.mean;
-  const percent   = prob === null ? 'n/a' : `${(prob * 100).toFixed(1)}%`;
-  const cadence   = prob && prob > 0 ? `about once every ${(1 / prob).toFixed(1)} days` : 'very rarely';
+  
+  // Safe aggregation that handles large datasets without call-stack overflow
+  let crossings = 0;
+  let peak = cs.max_temp !== undefined ? cs.max_temp : -Infinity;
+  for (let i = 0; i < recorded.length; i++) {
+    const val = recorded[i];
+    if (val > currentThreshold) crossings++;
+    if (cs.max_temp === undefined && val > peak) peak = val;
+  }
+  if (peak === -Infinity) peak = cs.mean;
+
+  const percent = prob === null ? 'n/a' : `${(prob * 100).toFixed(1)}%`;
+  const cadence = prob && prob > 0 ? `about once every ${(1 / prob).toFixed(1)} days` : 'very rarely';
 
   document.getElementById('takeawayTitle').textContent =
     `${percent} chance of crossing ${currentThreshold.toFixed(1)}°C on any given day`;
   document.getElementById('takeawayText').textContent =
-    `That is ${cadence}. In the recorded sample, ${crossings} of ${cs.n_days} days crossed this threshold.`;
+    `That is ${cadence}. In the recorded sample of ${cs.n_days.toLocaleString()} days, ${crossings.toLocaleString()} days crossed this threshold.`;
 
   const crossEl = document.getElementById('observedCrossings');
   const peakEl  = document.getElementById('observedPeak');
 
   if (firstLoad) {
-    countUp(crossEl, crossings, `/${cs.n_days}`, 0, 600);
+    countUp(crossEl, crossings, `/${cs.n_days.toLocaleString()}`, 0, 600);
     countUp(peakEl,  peak, '°C', 1, 700);
   } else {
-    if (crossEl) crossEl.textContent = `${crossings}/${cs.n_days}`;
+    if (crossEl) crossEl.textContent = `${crossings.toLocaleString()}/${cs.n_days.toLocaleString()}`;
     if (peakEl)  peakEl.textContent  = `${peak.toFixed(1)}°C`;
   }
 }
@@ -587,12 +598,20 @@ function buildComparisonTable(data) {
 function buildStatsTable(data) {
   const t = document.getElementById('statsTable');
   const cs = data.core_stats;
+  const info = data.dataset_info;
   t.innerHTML = '';
-  row(t, 'Mean',                   `${cs.mean}°C  (CI ${cs.mean_ci95[0]}–${cs.mean_ci95[1]})`);
-  row(t, 'Std. deviation',         `${cs.std_dev}°C  (CI ${cs.std_dev_ci95[0]}–${cs.std_dev_ci95[1]})`, "Average amount temperatures vary from the mean. Higher means more volatile.");
-  row(t, 'Coeff. of variation',    `${cs.cv_percent}%  (CI ${cs.cv_percent_ci95[0]}–${cs.cv_percent_ci95[1]})`, "Ratio of the standard deviation to the mean. Measures overall relative volatility.");
-  row(t, 'Shapiro-Wilk p-value',   `${cs.shapiro_wilk.p_value} (${cs.shapiro_wilk.is_normal_at_5pct ? 'Normal' : 'Not normal'} at 5%)`, "Tests if data is normally distributed. p > 0.05 means it follows a normal bell curve.");
-  row(t, 'Sample size',            `${cs.n_days} days`);
+  if (info) {
+    row(t, 'Location & Source', `${info.location_name} (Open-Meteo ERA5 API)`);
+    row(t, 'Observation Period', `${info.start_date} to ${info.end_date}`);
+  }
+  row(t, 'Sample size', `${cs.n_days.toLocaleString()} consecutive days`);
+  row(t, 'Historical Mean', `${cs.mean}°C  (95% CI ${cs.mean_ci95[0]}–${cs.mean_ci95[1]})`);
+  if (cs.min_temp !== undefined && cs.max_temp !== undefined) {
+    row(t, 'Recorded Range', `${cs.min_temp}°C (min) to ${cs.max_temp}°C (all-time peak)`);
+  }
+  row(t, 'Std. deviation', `${cs.std_dev}°C  (95% CI ${cs.std_dev_ci95[0]}–${cs.std_dev_ci95[1]})`, "Average amount temperatures vary from the mean. Higher means more volatile.");
+  row(t, 'Coeff. of variation', `${cs.cv_percent}%  (95% CI ${cs.cv_percent_ci95[0]}–${cs.cv_percent_ci95[1]})`, "Ratio of the standard deviation to the mean. Measures overall relative volatility.");
+  row(t, 'Normality check', `${cs.shapiro_wilk.is_normal_at_5pct ? 'Normal' : 'Non-Normal'} (p=${cs.shapiro_wilk.p_value})`, "Statistical tests show non-normality due to distinct seasonal patterns.");
 }
 
 function buildAssumptions(data) {
@@ -646,12 +665,23 @@ function buildTimelineChart(data) {
   // Windowing logic for the pan slider
   const panSlider = document.getElementById('panSlider');
   const panFrac = (panSlider ? parseFloat(panSlider.value) : 100) / 100;
-  const visibleSpan = Math.min(totalDays, 30); // show 30 days maximum
+  const visibleSpan = Math.min(totalDays, 45); // show 45 days window
   const maxStart = totalDays - visibleSpan;
-  const start = Math.round(maxStart * panFrac);
-  const end = start + visibleSpan;
+  const start = Math.max(0, Math.round(maxStart * panFrac));
+  const end = Math.min(totalDays, start + visibleSpan);
 
-  const labels = Array.from({length: totalDays}, (_, i) => `Day ${i + 1}`).slice(start, end);
+  const datesList = trend?.dates || [];
+  const labels = [];
+  for (let i = start; i < end; i++) {
+    if (i < nDays && datesList[i]) {
+      const d = new Date(datesList[i]);
+      labels.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }));
+    } else if (i < nDays) {
+      labels.push(`Day ${i + 1}`);
+    } else {
+      labels.push(`+${i - nDays + 1}d Proj`);
+    }
+  }
 
   const recorded = [];
   const projected = [];

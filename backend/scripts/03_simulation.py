@@ -132,10 +132,13 @@ def main():
     print("\n--- Bootstrap Resampling (Non-Parametric, Real Recorded Data) ---")
     temps = load_temps()
     rng = np.random.default_rng(RANDOM_SEED)
-    # Resample with replacement 10,000 times (same size as original dataset)
-    bootstrap_matrix = rng.choice(temps, size=(BOOTSTRAP_RESAMPLES, len(temps)), replace=True)
-    boot_exceed_fractions = np.mean(bootstrap_matrix > threshold_c, axis=1)
-    bootstrap_prob = round(float(np.mean(boot_exceed_fractions)), 4)
+    # Resample with replacement 10,000 times (in batches to maintain low memory footprint)
+    batch_size = 1000
+    boot_fractions = []
+    for _ in range(BOOTSTRAP_RESAMPLES // batch_size):
+        sub_matrix = rng.choice(temps, size=(batch_size, len(temps)), replace=True)
+        boot_fractions.extend(np.mean(sub_matrix > threshold_c, axis=1))
+    bootstrap_prob = round(float(np.mean(boot_fractions)), 4)
     print(f"  {BOOTSTRAP_RESAMPLES:,d} resamples: {bootstrap_prob:.4f}")
 
     # 3. Side-by-Side Comparison

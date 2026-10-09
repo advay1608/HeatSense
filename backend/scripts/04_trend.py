@@ -54,15 +54,17 @@ def main():
         )
 
     result = {
-        "slope_c_per_day": round(float(slope), 4),
-        "slope_p_value": round(float(p_value), 4),
-        "r_squared": round(float(r_squared), 4),
+        "slope_c_per_day": round(float(slope), 5),
+        "slope_c_per_decade": round(float(slope * 365.25 * 10), 3),
+        "slope_p_value": round(float(p_value), 5),
+        "r_squared": round(float(r_squared), 5),
         "is_statistically_significant": is_significant,
         "total_drift_c": round(float(total_drift), 3),
         "practical_note": practical_note,
         "residuals_pattern_ok": residuals_pattern_ok,
         "residuals": [round(float(r), 3) for r in residuals],
         "day_index": [int(d) for d in day_index],
+        "dates": df["date"].dt.strftime("%Y-%m-%d").tolist(),
     }
 
     print("=== TREND ANALYSIS ===")

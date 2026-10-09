@@ -44,7 +44,8 @@ def fig1_histogram(temps, dist_fit):
     threshold = dist_fit["threshold_c"]
 
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.hist(temps, bins=10, density=True, alpha=0.6, color="#4C72B0",
+    bins = 35 if len(temps) > 500 else 10
+    ax.hist(temps, bins=bins, density=True, alpha=0.6, color="#4C72B0",
             edgecolor="white", label="Observed daily max temps")
     x = np.linspace(temps.min() - 3, temps.max() + 3, 500)
     y = dist.pdf(x, *params)

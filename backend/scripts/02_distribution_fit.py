@@ -96,12 +96,18 @@ def main():
     qq = stats.probplot(temps, dist="norm")
     qq_r = qq[1][2]
 
+    # Check if canonical threshold is within sensible bounds of the dataset
+    threshold_c = THRESHOLD_C
+    if temps.max() <= threshold_c or temps.min() >= threshold_c:
+        threshold_c = round(float(np.percentile(temps, 90)), 1)
+        print(f"Notice: Canonical 36.0C outside range [{temps.min():.1f}, {temps.max():.1f}] — using 90th percentile: {threshold_c}C")
+
     best_dist = CANDIDATES[best_name]
     best_params = scored[best_name]["params"]
-    theoretical_probability = float(best_dist.sf(THRESHOLD_C, *best_params))
+    theoretical_probability = float(best_dist.sf(threshold_c, *best_params))
 
     result = {
-        "threshold_c": THRESHOLD_C,
+        "threshold_c": threshold_c,
         "candidates": candidates_out,
         "best_model": best_name,
         "holdout_validation": holdout,
@@ -115,7 +121,7 @@ def main():
     print(f"Best model: {best_name}")
     print(f"Holdout test log-likelihood — best: {holdout['best_model_test_log_likelihood']}, "
           f"runner-up: {holdout['runner_up_test_log_likelihood']}")
-    print(f"P(temp > {THRESHOLD_C}C) under {best_name} = {theoretical_probability:.4f}")
+    print(f"P(temp > {threshold_c}C) under {best_name} = {theoretical_probability:.4f}")
 
     write_result("distribution_fit", result)
     return result
