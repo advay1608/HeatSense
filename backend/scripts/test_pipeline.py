@@ -149,6 +149,34 @@ class TestHeatSensePipeline(unittest.TestCase):
         self.assertEqual(backend_data["distribution_fit"]["best_model"], frontend_data["distribution_fit"]["best_model"])
         self.assertEqual(backend_data["synthesis"]["heat_risk_index"], frontend_data["synthesis"]["heat_risk_index"])
 
+    def test_06_forecast_model(self):
+        """Verifies results.json and frontend snapshot include 7-day AR(1) forecast with widening spread."""
+        with open(RESULTS_PATH, "r", encoding="utf-8") as f:
+            res = json.load(f)
+
+        self.assertIn("forecast", res, "results.json missing 'forecast' section")
+        fc = res["forecast"]
+        self.assertIn("anchor_date", fc)
+        self.assertIn("anchor_temp_c", fc)
+        self.assertIn("persistence_rho", fc)
+        self.assertIn("days", fc)
+        self.assertEqual(len(fc["days"]), 7, "Forecast must contain exactly 7 projected days")
+
+        prev_spread = 0.0
+        for day in fc["days"]:
+            self.assertIn("day", day)
+            self.assertIn("date", day)
+            self.assertIn("expected_c", day)
+            self.assertIn("spread_c", day)
+            self.assertIn("min_projected_c", day)
+            self.assertIn("max_projected_c", day)
+            self.assertGreater(day["expected_c"], 15.0)
+            self.assertLess(day["expected_c"], 55.0)
+            self.assertLessEqual(day["min_projected_c"], day["expected_c"])
+            self.assertGreaterEqual(day["max_projected_c"], day["expected_c"])
+            self.assertGreaterEqual(day["spread_c"], prev_spread, "Forecast uncertainty spread must widen over time")
+            prev_spread = day["spread_c"]
+
 
 if __name__ == "__main__":
     unittest.main()
