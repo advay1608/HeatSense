@@ -269,3 +269,37 @@ If you follow this document and your assignment doc:
 - Re-running any single script after a bug fix automatically updates only
   that section of `results.json`, without needing anyone to re-run their own
   script.
+
+---
+
+## 8. Short-term AR(1) persistence forecasting
+
+While macro climate regression (`04_trend.py`) tracks decadal temperature drift (e.g. -0.085°C/decade over 76 years), daily operational heat management requires high-resolution short-term projections.
+
+In `06_synthesis.py`, an autoregressive persistence model is computed using Person 7's verified serial lag-1 autocorrelation ($\rho_1 = 0.9745$) anchored at the latest recorded day's temperature ($T_t$) and 14-day seasonal momentum ($m_{\text{recent}}$):
+
+$$\mathbb{E}[T_{t+k}] = \mu + \rho_1^k (T_t - \mu) + k \cdot m_{\text{recent}} \cdot e^{-k / 5}$$
+
+Uncertainty widens naturally over time as autoregressive memory decays:
+
+$$\sigma_k = \sigma \sqrt{\max\left(0.05, 1 - \rho_1^{2k}\right)} + 0.20 \cdot k$$
+
+This projection is exported under `results.json["forecast"]` and consumed by both the 7-day forecast cards and the timeline chart, providing seamless continuity between historical observations and near-term projections.
+
+---
+
+## 9. Physical support bounds for skewed distributions
+
+When fitting positive continuous physical quantities (such as daily temperatures above absolute zero in Kelvin or Celsius above regional base levels), unbounded SciPy location optimization can cause numerical degeneracy on symmetric datasets (e.g. driving $\text{loc} \to -\infty$ and $s \to 0$ in log-normal fits).
+
+In `02_distribution_fit.py`, distributions with positive support (`lognorm` and `gamma`) are constrained using `floc=0`. This ensures stable parameter estimates, non-zero scale parameters, and well-behaved analytical CDFs in both Python and client-side JavaScript.
+
+---
+
+## 10. Dashboard query parameter controls
+
+The frontend supports direct URL parameters for automated evaluation, headless testing, and deep-linking:
+
+- `?theme=dark` or `?theme=light`: overrides stored preference and system color-scheme.
+- `?model=normal`, `?model=lognorm`, `?model=gamma`, or `?model=gumbel_r`: selects the active statistical distribution.
+- `?threshold=40`: sets the active danger threshold in °C (valid range: 10–60°C).
