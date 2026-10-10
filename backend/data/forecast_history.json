@@ -1,0 +1,148 @@
+{
+  "forecast_runs": [
+    {
+      "retrieval_timestamp_utc": "2026-10-10T11:40:22.798106+00:00",
+      "predictions": [
+        {
+          "date": "2026-10-10",
+          "forecast_max_temp_c": 37.6,
+          "is_today": true,
+          "is_future": false,
+          "observed_max_temp_c": 37.6,
+          "is_validated": true
+        },
+        {
+          "date": "2026-10-11",
+          "forecast_max_temp_c": 37.6,
+          "is_today": false,
+          "is_future": true,
+          "observed_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-12",
+          "forecast_max_temp_c": 37.1,
+          "is_today": false,
+          "is_future": true,
+          "observed_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-13",
+          "forecast_max_temp_c": 37.3,
+          "is_today": false,
+          "is_future": true,
+          "observed_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-14",
+          "forecast_max_temp_c": 37.3,
+          "is_today": false,
+          "is_future": true,
+          "observed_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-15",
+          "forecast_max_temp_c": 37.6,
+          "is_today": false,
+          "is_future": true,
+          "observed_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-16",
+          "forecast_max_temp_c": 36.8,
+          "is_today": false,
+          "is_future": true,
+          "observed_max_temp_c": null,
+          "is_validated": false
+        }
+      ]
+    },
+    {
+      "retrieval_timestamp_utc": "2026-10-10T12:43:47.322376+00:00",
+      "predictions": [
+        {
+          "date": "2026-10-10",
+          "forecast_max_temp_c": 37.8,
+          "is_today": true,
+          "is_future": false,
+          "is_pre_target_snapshot": false,
+          "eligible_for_out_of_sample_validation": false,
+          "validation_status": "same_day_diagnostic_excluded",
+          "observed_proxy_max_temp_c": 37.6,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-11",
+          "forecast_max_temp_c": 37.4,
+          "is_today": false,
+          "is_future": true,
+          "is_pre_target_snapshot": true,
+          "eligible_for_out_of_sample_validation": true,
+          "validation_status": "pending_future_observation",
+          "observed_proxy_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-12",
+          "forecast_max_temp_c": 37.5,
+          "is_today": false,
+          "is_future": true,
+          "is_pre_target_snapshot": true,
+          "eligible_for_out_of_sample_validation": true,
+          "validation_status": "pending_future_observation",
+          "observed_proxy_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-13",
+          "forecast_max_temp_c": 37.0,
+          "is_today": false,
+          "is_future": true,
+          "is_pre_target_snapshot": true,
+          "eligible_for_out_of_sample_validation": true,
+          "validation_status": "pending_future_observation",
+          "observed_proxy_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-14",
+          "forecast_max_temp_c": 37.1,
+          "is_today": false,
+          "is_future": true,
+          "is_pre_target_snapshot": true,
+          "eligible_for_out_of_sample_validation": true,
+          "validation_status": "pending_future_observation",
+          "observed_proxy_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-15",
+          "forecast_max_temp_c": 36.6,
+          "is_today": false,
+          "is_future": true,
+          "is_pre_target_snapshot": true,
+          "eligible_for_out_of_sample_validation": true,
+          "validation_status": "pending_future_observation",
+          "observed_proxy_max_temp_c": null,
+          "is_validated": false
+        },
+        {
+          "date": "2026-10-16",
+          "forecast_max_temp_c": 36.8,
+          "is_today": false,
+          "is_future": true,
+          "is_pre_target_snapshot": true,
+          "eligible_for_out_of_sample_validation": true,
+          "validation_status": "pending_future_observation",
+          "observed_proxy_max_temp_c": null,
+          "is_validated": false
+        }
+      ]
+    }
+  ],
+  "last_updated_utc": "2026-10-10T12:43:47.322376+00:00"
+}
