@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HeatSense Comprehensive Project Report — Mumbai, Maharashtra, India</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #1a1a24;
+      --muted: #555566;
+      --border: #dcdce6;
+      --accent: #d35400;
+      --accent-subtle: #fef5e7;
+      --surface: #f8f9fa;
+      --danger: #c0392b;
+      --success: #27ae60;
+    }
+    @media print {
+      body { font-size: 11pt; color: #000; background: #fff; }
+      .print-btn { display: none !important; }
+      .container { width: 100% !important; max-width: 100% !important; margin: 0; padding: 0; }
+      .page-break { page-break-after: always; }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.55;
+      color: var(--ink);
+      background: var(--bg);
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+    }
+    header {
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.02em;
+    }
+    h2 {
+      font-size: 1.35rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.35rem;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--ink);
+    }
+    .meta-line {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin: 0.25rem 0;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-primary { background: #e8f4fd; color: #2980b9; }
+    .badge-danger  { background: #fde8e8; color: #c0392b; }
+    .badge-warn    { background: #fef5e7; color: #d35400; }
+    .badge-success { background: #eafaf1; color: #27ae60; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .stat-lbl {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-top: 0.25rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: var(--surface);
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .callout {
+      background: var(--surface);
+      border-left: 4px solid #2980b9;
+      padding: 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.92rem;
+    }
+    .callout-warn {
+      border-left-color: var(--accent);
+      background: var(--accent-subtle);
+    }
+    .callout-title {
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .forecast-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .forecast-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.4rem;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+    .forecast-card.hot {
+      border-color: var(--danger);
+      background: #fdf2f2;
+    }
+    .forecast-card.today {
+      border-color: var(--accent);
+      background: #fffaf0;
+      border-top: 3px solid var(--accent);
+    }
+    .forecast-phase {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 4px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .forecast-phase.today {
+      background: #fef08a;
+      color: #854d0e;
+    }
+    .forecast-phase.future {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .forecast-temp {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0.2rem 0;
+    }
+    .forecast-flag {
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .print-btn {
+      float: right;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+    <header>
+      <span class="badge badge-primary">College Statistics Project Report</span>
+      <h1>HeatSense — Extreme Temperature &amp; Variability Analysis</h1>
+      <p class="meta-line">
+        <strong>Location:</strong> Mumbai, Maharashtra, India (19.0861°N, 72.8529°E, elevation 6.0m) ·
+        <strong>Variable:</strong> <code>temperature_2m_max</code> (°C) ·
+        <strong>Source:</strong> ECMWF ERA5 via Open-Meteo API
+      </p>
+      <p class="meta-line">
+        <strong>Observation Coverage:</strong> 1950-01-01 to 2026-10-10 (<strong>28,042 consecutive daily observations</strong>, 0 missing)
+      </p>
+    </header>
+
+    <section>
+      <h2>1. Executive Summary &amp; Problem Statement</h2>
+      <p>
+        Extreme temperature variability presents a direct operational risk to coastal infrastructure, municipal power distribution, labor productivity, and public health in <strong>Mumbai, Maharashtra</strong>.
+        Conventional climatological assessments frequently commit two critical statistical errors:
+      </p>
+      <ol>
+        <li>Assuming daily maximum temperatures follow a simple unimodal Gaussian distribution, ignoring strong seasonal oscillations and coastal monsoon shifts.</li>
+        <li>Treating extreme temperature days as independent and identically distributed (i.i.d.) Bernoulli trials, ignoring temporal persistence and multi-day heatwave clustering.</li>
+      </ol>
+      <p>
+        The <strong>HeatSense</strong> system evaluates 76.7 years of daily ERA5 meteorological reanalysis records for Mumbai.
+        By combining rigorous parametric model selection, non-parametric bootstrap resampling, goodness-of-fit diagnostics, Markov chain persistence analysis, and live Numerical Weather Prediction (NWP), HeatSense provides an uncertainty-quantified characterization of thermal extremes.
+      </p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-val">28,042</div>
+          <div class="stat-lbl">Sample Size (Days)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">30.24°C</div>
+          <div class="stat-lbl">Sample Mean (95% CI [30.21, 30.27])</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">0.95%</div>
+          <div class="stat-lbl">Empirical Rate (> 36.0°C)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">105.3 days</div>
+          <div class="stat-lbl">Empirical Average Spacing</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Data Provenance &amp; Verification</h2>
+      <p>
+        Data was retrieved dynamically from the Open-Meteo Historical Weather Archive (ECMWF ERA5 reanalysis).
+        The dataset spans <strong>28,042 consecutive calendar days</strong> from January 1, 1950 to October 10, 2026 for Mumbai, Maharashtra.
+      </p>
+      <div class="callout">
+        <div class="callout-title">Methodological Disclosure: Reanalysis vs. Station Sensor Data</div>
+        ECMWF ERA5 reanalysis data represents a physically consistent assimilation of satellite radiances, coastal radiosondes, and surface reports across a ~0.25° grid (~25 km resolution).
+        It represents the regional grid cell average temperature (19.0861°N, 72.8529°E, elevation 6.0m) rather than a single street-level thermometer.
+      </div>
+    </section>
+
+    <section>
+      <h2>3. Sample Statistics &amp; Measurement Scales</h2>
+      <table>
+        <thead>
+          <tr><th>Statistical Parameter</th><th>Formula / Method</th><th>Value</th><th>95% Confidence Interval</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Sample Mean</td><td>x̄ = (1/n) Σ x_i</td><td>30.24°C</td><td>[30.208, 30.265]°C</td></tr>
+          <tr><td>Median</td><td>Q2 (50th percentile)</td><td>30.20°C</td><td>—</td></tr>
+          <tr><td>Sample Variance</td><td>s² = Σ (x_i - x̄)² / (n - 1)</td><td>5.699 °C²</td><td>—</td></tr>
+          <tr><td>Standard Deviation</td><td>s = √(s²)</td><td>2.387°C</td><td>[2.37, 2.405]°C</td></tr>
+          <tr><td>Quartiles (Q1, Q3)</td><td>25th &amp; 75th percentiles</td><td>Q1 = 28.3°C, Q3 = 32.0°C</td><td>—</td></tr>
+          <tr><td>Interquartile Range</td><td>IQR = Q3 - Q1</td><td>3.70°C</td><td>—</td></tr>
+          <tr><td>Extreme Range</td><td>Max - Min</td><td>19.2°C (22.1°C to 41.3°C)</td><td>—</td></tr>
+          <tr><td>Thermodynamic Relative Dispersion (Kelvin CV)</td><td>CV_K = s / (x̄ + 273.15)</td><td><strong>0.79%</strong></td><td>Thermodynamic ratio scale (Kelvin; x̄_K = 303.39 K)</td></tr>
+          <tr><td>Analytical Heat Exceedance (&gt; 36.0°C)</td><td>T &gt; 36.0°C (strict rule)</td><td><strong>265 days (0.95%)</strong></td><td>Average spacing: 105.3 days</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-warn">
+        <div class="callout-title">Measurement Scale Note on Coefficient of Variation (CV)</div>
+        Celsius is an interval temperature scale with an arbitrary zero point (0°C = 273.15 K). Therefore, presenting CV = (s / mean_C) * 100% as a physically meaningful relative variability percentage is statistically invalid, as its numerical value changes arbitrarily under affine shifts. On the true ratio Kelvin scale, relative dispersion is 0.79% (s / mean_K, where mean_K = 303.39 K).
+        Therefore, HeatSense reports the physically valid Kelvin CV (0.79%) rather than attributing false physical meaning to Celsius CV (7.90%).
+      </div>
+    </section>
+
+    <section>
+      <h2>4. Distribution Fitting &amp; Goodness-of-Fit Honesty</h2>
+      <p>
+        Four parametric candidate models were fitted via Maximum Likelihood Estimation (MLE) and evaluated against the empirical baseline:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Candidate Model</th><th>Log-Likelihood</th><th>AIC</th><th>ΔAIC</th><th>BIC</th><th>Kolmogorov-Smirnov Test</th><th>P(T &gt; 36.0°C)</th><th>Fit Decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+        <tr style="">
+            <td><strong>Normal</strong></td>
+            <td>-64,190.6</td>
+            <td>128,385.2</td>
+            <td>261.7</td>
+            <td>128,401.7</td>
+            <td>D = 0.0597 (p < 0.0001 (approx 1.94e-87))</td>
+            <td>0.79%</td>
+            <td><span class="badge badge-danger">Rejected</span></td>
+        </tr>
+        
+        <tr style="background: rgba(41, 128, 185, 0.08); font-weight: 600;">
+            <td><strong>Lognorm (Best AIC)</strong></td>
+            <td>-64,059.8</td>
+            <td>128,123.5</td>
+            <td>0.0</td>
+            <td>128,140.0</td>
+            <td>D = 0.0539 (p < 0.0001 (approx 3.91e-71))</td>
+            <td>1.21%</td>
+            <td><span class="badge badge-danger">Rejected</span></td>
+        </tr>
+        
+        <tr style="">
+            <td><strong>Gamma</strong></td>
+            <td>-64,079.8</td>
+            <td>128,163.5</td>
+            <td>40.0</td>
+            <td>128,180.0</td>
+            <td>D = 0.0558 (p < 0.0001 (approx 2.50e-76))</td>
+            <td>1.06%</td>
+            <td><span class="badge badge-danger">Rejected</span></td>
+        </tr>
+        
+        <tr style="">
+            <td><strong>Gumbel_r</strong></td>
+            <td>-64,883.6</td>
+            <td>129,771.1</td>
+            <td>1,647.6</td>
+            <td>129,787.6</td>
+            <td>D = 0.0738 (p < 0.0001 (approx 3.96e-133))</td>
+            <td>4.01%</td>
+            <td><span class="badge badge-danger">Rejected</span></td>
+        </tr>
+        
+        </tbody>
+      </table>
+      <div class="callout callout-warn">
+        <div class="callout-title">Critical Finding: Best Relative Candidate ≠ Adequate Absolute Fit</div>
+        While the <strong>Lognorm</strong> distribution achieves the lowest AIC penalty among candidates, the Kolmogorov-Smirnov test formally rejects all four candidates (p &lt; 0.0001).
+        This occurs because coastal Mumbai experiences seasonal shifts between the southwest monsoon and the post-monsoon solar heating peak ("October heat").
+        <strong>The empirical historical exceedance rate (0.95%) remains the primary, directly verifiable ground truth baseline.</strong>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. Seasonal Stratification (IMD Climatic Breakdown)</h2>
+      <p>
+        Stratifying the dataset into India Meteorological Department (IMD) defined seasons reflects Mumbai's coastal maritime climatology:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Season</th><th>Months</th><th>Days</th><th>Mean Max</th><th>Min Max</th><th>Peak Max</th><th>Days &gt; 36.0°C</th><th>Exceedance Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+        <tr>
+            <td><strong>Winter</strong></td>
+            <td>12, 1, 2</td>
+            <td>6,918</td>
+            <td>29.88°C</td>
+            <td>22.1°C</td>
+            <td>37.5°C</td>
+            <td>5</td>
+            <td><strong>0.07%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><strong>Summer (Pre-Monsoon)</strong></td>
+            <td>3, 4, 5</td>
+            <td>7,084</td>
+            <td>32.42°C</td>
+            <td>23.7°C</td>
+            <td>41.3°C</td>
+            <td>253</td>
+            <td><strong>3.57%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><strong>Monsoon</strong></td>
+            <td>6, 7, 8, 9</td>
+            <td>9,394</td>
+            <td>28.40°C</td>
+            <td>24.8°C</td>
+            <td>34.9°C</td>
+            <td>0</td>
+            <td><strong>0.00%</strong></td>
+        </tr>
+        
+        <tr>
+            <td><strong>Post-Monsoon</strong></td>
+            <td>10, 11</td>
+            <td>4,646</td>
+            <td>31.15°C</td>
+            <td>22.5°C</td>
+            <td>37.8°C</td>
+            <td>7</td>
+            <td><strong>0.15%</strong></td>
+        </tr>
+        
+        </tbody>
+      </table>
+      <p>
+        In Mumbai, daily maximum temperatures are tightly moderated by the Arabian Sea. Pre-monsoon summer (March–May) and post-monsoon retreat (October–November, "October heat") experience the highest peak temperatures, while overcast southwest monsoon conditions and mild winter sea breezes keep thermal stress constrained.
+      </p>
+    </section>
+
+    <section>
+      <h2>6. Long-Term Secular Trend Analysis</h2>
+      <p>
+        To prevent seasonal truncation bias, trend analysis rigorously separates <strong>complete calendar years (1950–2025, 76 complete years)</strong> from the partial observation year 2026 (283 days observed through October 10).
+      </p>
+      <table>
+        <thead>
+          <tr><th>Analysis Sample</th><th>Period</th><th>Observations</th><th>Estimated Slope</th><th>95% Confidence Interval</th><th>R²</th><th>p-value</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Complete Calendar Years</strong> (Annual Means)</td>
+            <td>1950-2025 (76 complete calendar years)</td>
+            <td>76 full years</td>
+            <td><strong>+0.1128°C / decade</strong></td>
+            <td>[0.0725, 0.1532]°C/dec</td>
+            <td>R² = 0.289</td>
+            <td>< 0.0001 (approx 5.46e-07)</td>
+          </tr>
+          <tr>
+            <td>Full Continuous Daily Record</td>
+            <td>1950-01-01 to 2026-10-10</td>
+            <td>28,042 days</td>
+            <td>+0.1192°C / decade</td>
+            <td>[0.1066, 0.1317]°C/dec</td>
+            <td>R² = 0.0122</td>
+            <td>< 0.0001 (approx 4.45e-77)</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <div class="callout-title">Statistical Autocorrelation &amp; Trend Inference Limitations</div>
+        Daily temperature series exhibit high serial correlation (ρ₁ = 0.9039), which artificially inflates nominal degrees of freedom and narrows daily OLS standard errors.
+        While aggregating into complete calendar years eliminates day-to-day autocorrelation and avoids seasonal truncation bias, annual averages cannot be assumed strictly independent without qualification.
+        Multi-year climatic oscillations (e.g., ENSO, Indian Ocean Dipole, and monsoon variability) introduce inter-annual memory, meaning regression p-values and confidence intervals must be interpreted with caution.
+      </div>
+    </section>
+
+    <section>
+      <h2>7. Serial Dependence &amp; Heatwave Clustering</h2>
+      <p>
+        Heat does not arrive as isolated random days. Serial dependence analysis demonstrates persistence:
+      </p>
+      <ul>
+        <li><strong>Lag-1 Autocorrelation:</strong> ρ₁ = 0.9039 (Weekly persistence ρ₇ = 0.648).</li>
+        <li><strong>Cluster Concentration:</strong> 64.9% of extreme days occur inside multi-day runs.</li>
+        <li><strong>Mean Heatwave Run Length:</strong> 1.63 consecutive days above 36.0°C (All-time longest run: 5 days).</li>
+        <li><strong>Markov Chain Transition:</strong> P(Hot tomorrow | Hot today) = <strong>38.6%</strong> versus P(Hot tomorrow | Cool today) = <strong>0.6%</strong>.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>8. Real 7-Day Numerical Weather Forecast &amp; Probabilistic Prediction</h2>
+      <p>
+        HeatSense integrates the physical Open-Meteo NWP Forecast API for Mumbai, rigorously separating near-term physical weather predictions from historical statistical survival functions, while overlaying our empirical Markov chain conditional exceedance model:
+      </p>
+      <div class="forecast-grid">
+        
+            <div class="forecast-card today hot">
+                <div class="forecast-phase today">TODAY · ELAPSED</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">Today (2026-10-10)</div>
+                <div class="forecast-temp">37.8°C</div>
+                <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">State S₀: Extreme Peak</div>
+                <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
+                <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">Same-day diagnostic (retrieved post-peak; excluded from skill score)</div>
+            </div>
+            
+            <div class="forecast-card hot">
+                <div class="forecast-phase future">FUTURE (+1d)</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-11</div>
+                <div class="forecast-temp">37.4°C</div>
+                <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 38.6%</div>
+                <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
+                <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
+            </div>
+            
+            <div class="forecast-card hot">
+                <div class="forecast-phase future">FUTURE (+2d)</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-12</div>
+                <div class="forecast-temp">37.5°C</div>
+                <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 15.3%</div>
+                <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
+                <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
+            </div>
+            
+            <div class="forecast-card hot">
+                <div class="forecast-phase future">FUTURE (+3d)</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-13</div>
+                <div class="forecast-temp">37.0°C</div>
+                <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 6.4%</div>
+                <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
+                <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
+            </div>
+            
+            <div class="forecast-card hot">
+                <div class="forecast-phase future">FUTURE (+4d)</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-14</div>
+                <div class="forecast-temp">37.1°C</div>
+                <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 3.0%</div>
+                <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
+                <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
+            </div>
+            
+            <div class="forecast-card hot">
+                <div class="forecast-phase future">FUTURE (+5d)</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-15</div>
+                <div class="forecast-temp">36.6°C</div>
+                <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 1.7%</div>
+                <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
+                <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
+            </div>
+            
+            <div class="forecast-card hot">
+                <div class="forecast-phase future">FUTURE (+6d)</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-16</div>
+                <div class="forecast-temp">36.8°C</div>
+                <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 1.2%</div>
+                <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
+                <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
+            </div>
+            
+      </div>
+      <p style="font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem;">
+        Data retrieved: 2026-10-10 18:13:47 IST (2026-10-10T12:43:47.322376+00:00) · Source: Open-Meteo NWP model ensemble for Mumbai (19.0861°N, 72.8529°E, Elevation 6.0m). (Client query timestamp; upstream numerical model run cycle initialized independently by Open-Meteo).
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1rem; font-size:0.85rem;">
+          <h3 style="margin:0 0 0.5rem 0; font-size:0.95rem;">Meteorological Context: NWP Grid vs. IMD Mumbai Stations</h3>
+          <p style="margin:0; color:var(--muted); line-height:1.5;">
+            The Open-Meteo operational grid cell (19.0861°N, 72.8529°E) predicts <strong>36.8–37.6°C</strong> during active post-monsoon <em>"October Heat"</em>.
+            In Mumbai, October marks the immediate post-monsoon transition where clear skies and warm continental easterlies delay the cooling afternoon sea breeze.
+            This creates strong thermal gradients: inland/suburban <strong>IMD Santacruz</strong> (typical highs 36.0–37.8°C; all-time record 38.6°C) aligns closely with the NWP grid, whereas coastal <strong>IMD Colaba</strong> (32.5–34.5°C) is heavily buffered by maritime airflow. The NWP model captures area-averaged suburban thermodynamics. HeatSense preserves authentic raw API numbers without modification.
+          </p>
+        </div>
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1rem; font-size:0.85rem;">
+          <h3 style="margin:0 0 0.5rem 0; font-size:0.95rem;">Strict Forecast Validation Ledger</h3>
+          <div style="color:var(--muted); line-height:1.6;">
+            <div>Verified Out-of-Sample Pairs: <strong style="color:var(--ink);">0 dates (Awaiting completed out-of-sample cycles)</strong></div>
+            <div>Same-Day Diagnostic (Post-Peak): <strong style="color:var(--muted);">1 date (10 Oct 2026, excluded from skill score)</strong></div>
+            <div>Pending Future Forecast Dates: <strong style="color:var(--accent);">6 dates (11–16 Oct 2026)</strong></div>
+            <div>Out-of-Sample MAE / Bias: <strong>N/A (No prior pre-date cycles completed)</strong></div>
+            <p style="font-size:0.75rem; margin:0.4rem 0 0 0; border-top:1px dashed var(--border); padding-top:0.3rem;">
+              <strong>Verification Target Nature:</strong> Archive verification uses ECMWF ERA5 reanalysis grid estimates (19.0861°N, 72.8529°E), not independent ground station thermometers. Because operational NWP and ERA5 share underlying ECMWF atmospheric physics, forecast-versus-reanalysis comparisons do not constitute independent physical station validation.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>9. Exploratory Heat Risk Index (Audit &amp; Decision Support)</h2>
+      <div class="stat-grid">
+        <div class="stat-card" style="border-color: var(--accent);">
+          <div class="stat-val">1.05 / 100</div>
+          <div class="stat-lbl">Exploratory Severity Score (LOW)</div>
+        </div>
+      </div>
+      <p>
+        <strong>Audit Notice:</strong> Multiplying empirical probabilities by persistence and drift factors creates an operational severity score, not a calibrated mathematical probability.
+        HeatSense transparently presents this metric as an <strong>Exploratory Decision-Support Indicator</strong> (0–100 scale), disaggregated into its constituent factors:
+      </p>
+      <ul>
+        <li>Empirical Ground Truth Baseline: 0.95% (265 of 28,042 days strictly &gt; 36.0°C)</li>
+        <li>Temporal Clustering Adjustment: ×1.019</li>
+        <li>Secular Drift Adjustment: ×1.091</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>10. Limitations &amp; Conclusions</h2>
+      <ul>
+        <li><strong>Coastal Microclimate Variation:</strong> Reanalysis data averages grid cells; high-density coastal areas and heat-island concrete clusters may experience higher micro-scale heat indices than the regional grid cell average.</li>
+        <li><strong>Humidity &amp; Wet-Bulb Considerations:</strong> Because Mumbai is a coastal city, apparent temperature and wet-bulb globe temperature (WBGT) are heavily influenced by relative humidity; dry-bulb maximums should be supplemented with humidity metrics for occupational health assessments.</li>
+        <li><strong>Long-Term Warming:</strong> Mumbai shows a statistically significant warming trend of +0.113°C per decade across complete calendar years (1950–2025), emphasizing the importance of long-term coastal climate adaptation.</li>
+      </ul>
+    </section>
+
+    <footer style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 1.5rem; font-size: 0.85rem; color: var(--muted); text-align: center;">
+      HeatSense — Variability and Extreme Temperature Analysis · Automated College Statistics Project Export for Mumbai, Maharashtra, India · Generated 2026-10-10
+    </footer>
+  </div>
+</body>
+</html>
