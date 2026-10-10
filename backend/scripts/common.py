@@ -35,12 +35,37 @@ import numpy as np
 import pandas as pd
 
 # ---------------------------------------------------------------------------
-# Paths (do not hardcode these elsewhere — import them from here)
+# Centralized Configuration & Paths (imported from config.py)
 # ---------------------------------------------------------------------------
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-BACKEND_DIR = os.path.dirname(THIS_DIR)
-DATA_PATH = os.path.join(BACKEND_DIR, "data", "dataset.csv")
-RESULTS_PATH = os.path.join(BACKEND_DIR, "output", "results.json")
+from config import (
+    CITY,
+    STATE,
+    COUNTRY,
+    LOCATION_NAME,
+    SHORT_LOCATION_NAME,
+    REQUESTED_LATITUDE,
+    REQUESTED_LONGITUDE,
+    TIMEZONE,
+    VARIABLE,
+    UNITS,
+    UNITS_SYMBOL,
+    DEFAULT_START_DATE,
+    DEFAULT_THRESHOLD_C,
+    EXCEEDANCE_RULE,
+    THIS_DIR,
+    BACKEND_DIR,
+    DATA_DIR,
+    OUTPUT_DIR,
+    FIGURES_DIR,
+    FRONTEND_DIR,
+    DATA_PATH,
+    DATASET_METADATA_PATH,
+    MUMBAI_CACHE_PATH,
+    DELHI_ARCHIVE_PATH,
+    RESULTS_PATH,
+    SNAPSHOT_PATH,
+    FORECAST_HISTORY_PATH,
+)
 
 
 # ---------------------------------------------------------------------------
