@@ -1,22 +1,49 @@
 {
-  "location_name": "New Delhi, India",
-  "latitude": 28.6139,
-  "longitude": 77.209,
-  "elevation_m": 214.0,
+  "city": "Mumbai",
+  "state": "Maharashtra",
+  "country": "India",
+  "location_name": "Mumbai, Maharashtra, India",
+  "requested_latitude": 19.076,
+  "requested_longitude": 72.8777,
+  "latitude": 19.086115,
+  "longitude": 72.85291,
+  "elevation_m": 6.0,
   "timezone": "Asia/Kolkata",
+  "selected_variable": "temperature_2m_max",
+  "units": "degrees Celsius",
+  "requested_period": {
+    "start_date": "1950-01-01",
+    "requested_end_date": "2026-10-10"
+  },
+  "actual_data_coverage": {
+    "start_date": "1950-01-01",
+    "end_date": "2026-10-10",
+    "total_days_requested": 28042,
+    "valid_observations": 28042,
+    "missing_observations": 0,
+    "duplicate_dates_removed": 0
+  },
   "start_date": "1950-01-01",
-  "end_date": "2026-10-07",
-  "total_observations": 28039,
+  "end_date": "2026-10-10",
+  "total_observations": 28042,
   "temperature_stats": {
-    "min_c": 12.3,
-    "max_c": 47.5,
-    "mean_c": 30.82,
-    "std_c": 6.8
+    "min_c": 22.1,
+    "max_c": 41.3,
+    "range_c": 19.2,
+    "mean_c": 30.24,
+    "std_c": 2.39
   },
   "source": "Open-Meteo Historical Weather Archive API",
-  "underlying_model": "ECMWF ERA5 Reanalysis (0.25 deg grid resolution)",
-  "citation": "Open-Meteo.com Historical Weather Archive API (ERA5 Reanalysis by ECMWF). Data retrieved for New Delhi, India (28.6139 N, 77.209 E) spanning 1950-01-01 to 2026-10-07.",
+  "underlying_model": "ECMWF ERA5 Reanalysis (~0.25 deg grid resolution)",
+  "grid_point_disclosure": "Data represents ECMWF ERA5 reanalysis grid point (19.0861\u00b0N, 72.8529\u00b0E, elevation 6.0m), not a single physical weather station sensor.",
+  "citation": "Open-Meteo.com Historical Weather Archive API (ERA5 Reanalysis by ECMWF). Data retrieved for Mumbai, Maharashtra, India (Requested: 19.076\u00b0 N, 72.8777\u00b0 E; ERA5 Grid Point: 19.086115\u00b0 N, 72.85291\u00b0 E) spanning 1950-01-01 to 2026-10-10.",
   "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
-  "fetched_at": "2026-10-09T12:25:42.285938Z",
-  "description": "National Capital Region experiencing intense Urban Heat Island (UHI) dynamics and extreme summer heatwaves."
+  "retrieval_timestamp": "2026-10-10T11:21:17.199632+00:00",
+  "is_cached": false,
+  "cache_reason": null,
+  "limitations": [
+    "ECMWF ERA5 reanalysis data represents a ~0.25\u00b0 (~25\u201331 km) grid cell; localized coastal microclimates and urban heat island effects are smoothed.",
+    "Archive updates lag real-time by approximately 2\u20135 days due to ERA5 assimilation cycles.",
+    "Daily maximum reflects 2-meter air temperature over the calendar day in Asia/Kolkata timezone."
+  ]
 }

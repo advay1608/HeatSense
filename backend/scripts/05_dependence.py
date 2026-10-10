@@ -4,13 +4,21 @@
 OWNER: Person 7  (see assignments/PERSON7.md)
 WRITES: results.json["dependence"]
 READS:  backend/data/dataset.csv, results.json["distribution_fit"]
-        (for the canonical threshold — falls back to a default if not
-        yet available, but should be rerun once it is)
 
-Lag-1 autocorrelation and run-length (heatwave clustering) analysis.
+Evaluates serial persistence, multi-lag autocorrelation, and heatwave clustering:
+- Lag-1 through Lag-14 autocorrelations
+- Strict exceedance rule: temperature > threshold_c
+- Consecutive run-length analysis (clustering duration and frequency)
+- First-order Markov chain transition probabilities:
+    P(Hot tomorrow | Hot today) vs. P(Hot tomorrow | Cool today)
 """
 
+import os
+import sys
 import numpy as np
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, THIS_DIR)
 from common import load_temps, read_results, write_result
 
 DEFAULT_THRESHOLD_C = 36.0
@@ -42,13 +50,9 @@ def main():
     temps = load_temps()
     results = read_results()
 
-    threshold = (
+    threshold = float(
         results.get("distribution_fit", {}).get("threshold_c", DEFAULT_THRESHOLD_C)
     )
-    if "distribution_fit" not in results:
-        print(f"NOTE: distribution_fit section not found yet — using default "
-              f"threshold {DEFAULT_THRESHOLD_C}C. Rerun this script once "
-              f"02_distribution_fit.py has run.")
 
     autocorr = lag1_autocorrelation(temps)
     n = len(temps)
@@ -60,6 +64,7 @@ def main():
     for lag in [1, 2, 3, 5, 7, 14]:
         multilag[f"lag_{lag}"] = round(float(np.corrcoef(temps[:-lag], temps[lag:])[0, 1]), 4)
 
+    # Rule: temperature > threshold
     is_extreme = temps > threshold
     runs = run_lengths(is_extreme)
 
@@ -71,7 +76,7 @@ def main():
     days_in_multiday_clusters = sum(r for r in runs if r >= 2)
     pct_clustered = round((days_in_multiday_clusters / total_extreme_days * 100), 1) if total_extreme_days > 0 else 0.0
 
-    # Markovian state transition probabilities
+    # Markov transition probabilities
     ext_curr = is_extreme[:-1]
     ext_next = is_extreme[1:]
     n_hot_today = int(np.sum(ext_curr))
@@ -82,11 +87,11 @@ def main():
 
     if is_significant and max_run > 1:
         interpretation = (
-            f"Extreme days show severe serial clustering (lag-1 autocorrelation={autocorr:.2f}, "
+            f"Extreme days exhibit pronounced serial persistence (lag-1 autocorrelation={autocorr:.4f}, "
             f"longest run={max_run} consecutive days, mean run={mean_run:.1f} days). "
-            f"Crucially, P(Hot tomorrow | Hot today) = {p_hot_given_hot*100:.1f}%, versus just "
-            f"{p_hot_given_cool*100:.1f}% if today is cool. Over {pct_clustered}% of extreme days occur "
-            f"as part of multi-day heatwaves, proving extreme heat is persistent, not isolated."
+            f"Crucially, P(Hot tomorrow | Hot today) = {p_hot_given_hot*100:.1f}%, compared to only "
+            f"{p_hot_given_cool*100:.1f}% if today is cool. Furthermore, {pct_clustered}% of all extreme days occur "
+            "as part of multi-day heatwave episodes, demonstrating that extreme heat arrives in persistent waves rather than isolated events."
         )
     elif n_runs == 0:
         interpretation = (
@@ -97,12 +102,13 @@ def main():
     else:
         interpretation = (
             f"Extreme days appear largely independent (lag-1 autocorrelation="
-            f"{autocorr:.2f}, not significant at the 5% level). The per-day "
-            f"probability estimate is a reasonable description of real-world risk."
+            f"{autocorr:.4f}, not statistically significant). The per-day "
+            "probability estimate is a reasonable description of real-world risk."
         )
 
     result = {
         "threshold_c": threshold,
+        "exceedance_rule": "temperature > threshold_c",
         "lag1_autocorrelation": round(autocorr, 4),
         "is_significant": is_significant,
         "significance_bound": round(float(significance_bound), 4),
@@ -117,6 +123,7 @@ def main():
             "unconditional_base_probability": p_base_unconditional,
             "p_hot_tomorrow_given_hot_today": p_hot_given_hot,
             "p_hot_tomorrow_given_cool_today": p_hot_given_cool,
+            "limitations_note": "Transition probabilities and clustering metrics reflect combined synoptic weather persistence and strong seasonal concentration (summer). They must not be interpreted as stationary, time-invariant physical constants across all calendar seasons.",
         },
         "interpretation": interpretation,
     }
@@ -124,10 +131,9 @@ def main():
     print("=== DEPENDENCE & CLUSTERING ===")
     print(f"Lag-1 autocorrelation: {result['lag1_autocorrelation']} (bound: +/-{significance_bound:.4f}, significant: {is_significant})")
     print(f"Weekly persistence (Lag-7): {multilag['lag_7']}")
-    print(f"Runs above {threshold}C: {n_runs} discrete clusters | Max length: {max_run} days | Mean: {mean_run} days (Median: {median_run} days)")
-    print(f"P(Hot tomorrow | Hot today): {p_hot_given_hot*100:.1f}% vs P(Hot tomorrow | Cool today): {p_hot_given_cool*100:.1f}% (Base: {p_base_unconditional*100:.1f}%)")
-    print(f"Clustered extreme days: {pct_clustered}% of all extreme days belong to multi-day runs.")
-    print(interpretation)
+    print(f"Runs above {threshold} C: {n_runs} clusters | Max run: {max_run} days | Mean run: {mean_run} days")
+    print(f"Markov transition: P(Hot|Hot)={p_hot_given_hot*100:.1f}% vs P(Hot|Cool)={p_hot_given_cool*100:.1f}% (Base: {p_base_unconditional*100:.1f}%)")
+    print(f"Clustering: {pct_clustered}% of extreme days occur in multi-day runs (>=2 days).")
 
     write_result("dependence", result)
     return result

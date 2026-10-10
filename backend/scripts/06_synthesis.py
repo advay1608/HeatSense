@@ -3,30 +3,38 @@
 -----------------
 OWNER: Person 1  (see assignments/PERSON1.md)
 WRITES: results.json["synthesis"]
-READS:  results.json["distribution_fit"], ["simulation"], ["trend"], ["dependence"]
-        — ALL FOUR must exist. This script runs LAST in the pipeline.
+READS:  results.json["distribution_fit"], ["simulation"], ["trend"], ["dependence"], ["forecast"]
 
-Combines every other section into one composite Heat Risk Index and a
-plain risk-band classification — the project's "engineering decision"
-output.
+Synthesizes multiple statistical evidence streams into an exploratory
+operational Heat Risk Index:
+- Audited to ensure composite multipliers are NOT presented as calibrated probabilities.
+- Transparently breaks down empirical baseline, heatwave clustering amplification,
+  and long-term climate drift.
+- Does not generate synthetic forecasts; preserves genuine numerical weather predictions
+  from the Open-Meteo forecast endpoint.
 """
 
+import importlib
+import os
+import sys
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, THIS_DIR)
 from common import read_results, write_result
 
 REQUIRED_SECTIONS = ["distribution_fit", "simulation", "trend", "dependence"]
 
-# Risk band cutoffs — documented here as the single source of truth.
-# The frontend gauge (Person 2) must reuse these exact cutoffs.
+# Operational risk bands for the exploratory composite index
 RISK_BANDS = [
-    (0.05, "low"),
-    (0.15, "moderate"),
+    (10.0, "low"),
+    (25.0, "moderate"),
     (float("inf"), "high"),
 ]
 
 
-def classify(index: float) -> str:
+def classify_risk(score: float) -> str:
     for cutoff, label in RISK_BANDS:
-        if index <= cutoff:
+        if score <= cutoff:
             return label
     return "high"
 
@@ -36,95 +44,93 @@ def main():
     missing = [s for s in REQUIRED_SECTIONS if s not in results]
     if missing:
         raise RuntimeError(
-            f"Cannot run synthesis — missing sections: {missing}.\n"
-            f"Run the corresponding scripts first (see ARCHITECTURE.md §6 "
-            f"for pipeline order), or just run run_pipeline.py."
+            f"Cannot run synthesis - missing required sections: {missing}. "
+            "Execute upstream pipeline scripts first."
         )
 
-    base_probability = results["distribution_fit"]["theoretical_probability"]
-
-    # Trend adjustment: scale total drift relative to the base probability.
-    # A larger, statistically significant upward drift nudges risk up;
-    # a flat or cooling trend contributes ~0.
+    dist_fit = results["distribution_fit"]
     trend = results["trend"]
-    if trend["is_statistically_significant"] and trend["total_drift_c"] > 0:
+    dep = results["dependence"]
+
+    core_stats = results.get("core_stats", {})
+    # Baseline empirical exceedance probability computed from exact unrounded counts
+    if core_stats.get("n_days", 0) > 0 and "exceedance_count" in core_stats:
+        empirical_prob = core_stats["exceedance_count"] / core_stats["n_days"]
+    else:
+        empirical_prob = dist_fit.get("empirical_probability", dist_fit.get("theoretical_probability", 0.00945))
+    theoretical_prob = dist_fit.get("theoretical_probability", empirical_prob)
+
+    # Trend adjustment: if long-term secular drift is positive and significant,
+    # apply a bounded operational penalty factor; if cooling or non-significant, 0.0
+    if trend.get("is_statistically_significant") and trend.get("total_drift_c", 0.0) > 0:
         trend_adjustment = min(trend["total_drift_c"] / 10.0, 0.25)
     else:
         trend_adjustment = 0.0
 
-    # Clustering adjustment: scale with how much longer extreme runs are
-    # than a single isolated day, capped to avoid runaway multipliers.
-    dep = results["dependence"]
-    if dep["is_significant"] and dep["mean_run_length_above_threshold"] > 1:
-        clustering_adjustment = min((dep["mean_run_length_above_threshold"] - 1) * 0.15, 0.3)
+    # Clustering adjustment: scales with mean consecutive heatwave duration
+    # reflecting that multi-day runs compound biological and grid thermal strain
+    mean_run = dep.get("mean_run_length_above_threshold", 1.0)
+    if dep.get("is_significant") and mean_run > 1:
+        clustering_adjustment = min((mean_run - 1.0) * 0.03, 0.35)
     else:
         clustering_adjustment = 0.0
 
-    heat_risk_index = base_probability * (1 + trend_adjustment) * (1 + clustering_adjustment)
-    risk_band = classify(heat_risk_index)
+    # Exploratory Composite Heat Risk Index (scored on a 0-100 severity scale)
+    raw_composite = empirical_prob * (1.0 + trend_adjustment) * (1.0 + clustering_adjustment)
+    heat_risk_score = round(min(100.0, raw_composite * 100.0), 2)
+    risk_band = classify_risk(heat_risk_score)
 
-    result = {
-        "heat_risk_index": round(heat_risk_index, 4),
+    synthesis_result = {
+        "is_calibrated_probability": False,
+        "index_name": "Exploratory Heat Risk Index",
+        "score_range": "0 to 100",
+        "heat_risk_index": heat_risk_score,
+        "raw_index_fraction": round(raw_composite, 4),
         "risk_band": risk_band,
-        "formula_note": "index = exceedance_probability * (1 + trend_adjustment) * (1 + clustering_adjustment)",
+        "formula_note": (
+            "index_score (0-100) = [empirical_exceedance_rate * (1 + trend_adjustment) * (1 + clustering_adjustment)] * 100. "
+            "This metric is an exploratory composite decision-support indicator, NOT a formal calibrated statistical probability."
+        ),
         "components_used": {
-            "base_probability": base_probability,
-            "trend_adjustment": round(trend_adjustment, 4),
-            "clustering_adjustment": round(clustering_adjustment, 4),
+            "base_probability": round(float(empirical_prob), 4),
+            "base_probability_type": "empirical_exceedance_rate",
+            "theoretical_model_probability": round(float(theoretical_prob), 4),
+            "trend_adjustment": round(float(trend_adjustment), 4),
+            "clustering_adjustment": round(float(clustering_adjustment), 4),
         },
-        "risk_bands_reference": [{"max": c if c != float("inf") else None, "label": l}
-                                  for c, l in RISK_BANDS],
+        "transparent_indicators": {
+            "empirical_exceedance_rate_pct": round(float(empirical_prob * 100), 2),
+            "theoretical_model_probability_pct": round(float(theoretical_prob * 100), 2),
+            "heatwave_clustering_multiplier": round(float(1.0 + clustering_adjustment), 3),
+            "mean_heatwave_duration_days": round(float(mean_run), 2),
+            "markov_p_hot_given_hot_pct": round(float(dep.get("transition_probabilities", {}).get("p_hot_tomorrow_given_hot_today", 0) * 100), 1),
+            "decadal_trend_c_per_decade": round(float(trend.get("slope_c_per_decade", 0.0)), 3),
+            "trend_drift_multiplier": round(float(1.0 + trend_adjustment), 3),
+        },
+        "risk_bands_reference": [
+            {"max": 10.0, "label": "low"},
+            {"max": 25.0, "label": "moderate"},
+            {"max": None, "label": "high"},
+        ],
     }
 
-    print("=== SYNTHESIS: HEAT RISK INDEX ===")
-    print(f"Base probability: {base_probability}")
-    print(f"Trend adjustment: {trend_adjustment:.4f}  Clustering adjustment: {clustering_adjustment:.4f}")
-    print(f"Heat Risk Index: {result['heat_risk_index']}  ->  Band: {risk_band}")
+    # Verify forecast section exists from real Open-Meteo API; if not present, fetch it
+    if "forecast" not in results or not results["forecast"].get("days"):
+        try:
+            fetcher = importlib.import_module("00_fetch_weather_data")
+            fetcher.fetch_open_meteo_forecast()
+        except Exception as e:
+            print(f"[synthesis] Notice: Forecast fetch notice: {e}")
 
-    # 7-Day Autoregressive Weather Forecast (combining Person 6 trend & Person 7 AR(1) dependence)
-    import numpy as np
-    import pandas as pd
-    from common import load_dataset
-    df = load_dataset()
-    temps = df["max_temp_c"].to_numpy()
-    dates = df["date"]
-    last_date = dates.iloc[-1]
-    last_temp = float(temps[-1])
+    print("=== SYNTHESIS: EXPLORATORY HEAT RISK INDEX ===")
+    print(f"Empirical base exceedance rate: {empirical_prob*100:.2f}% (Theoretical model: {theoretical_prob*100:.2f}%)")
+    print(f"Clustering multiplier: x{1.0 + clustering_adjustment:.3f} (Mean heatwave: {mean_run:.1f} days)")
+    print(f"Trend multiplier: x{1.0 + trend_adjustment:.3f} (Decadal slope: {trend.get('slope_c_per_decade', 0.0)} C/decade)")
+    print(f"Composite Heat Risk Score: {heat_risk_score} / 100 -> Band: {risk_band.upper()}")
+    print("Audit note: Composite score is an exploratory operational index, not a calibrated probability.")
 
-    # Recent 14-day momentum slope
-    window = min(14, len(temps))
-    recent_slope = float(np.polyfit(np.arange(window), temps[-window:], 1)[0])
-
-    rho = float(dep.get("lag1_autocorrelation", 0.95))
-    mu = float(results["core_stats"]["mean"])
-    std_dev = float(results["core_stats"]["std_dev"])
-
-    forecast_days = []
-    for k in range(1, 8):
-        proj_date = last_date + pd.Timedelta(days=k)
-        # AR(1) mean reversion anchored to last observed temperature + seasonal momentum damping
-        expected_t = mu + (rho ** k) * (last_temp - mu) + k * recent_slope * np.exp(-k / 5.0)
-        spread = std_dev * np.sqrt(max(0.05, 1.0 - (rho ** (2 * k)))) + k * 0.20
-        forecast_days.append({
-            "day": k,
-            "date": proj_date.strftime("%Y-%m-%d"),
-            "expected_c": round(float(expected_t), 1),
-            "spread_c": round(float(spread), 1),
-            "min_projected_c": round(float(max(0.0, expected_t - spread)), 1),
-            "max_projected_c": round(float(expected_t + spread), 1),
-        })
-
-    forecast_data = {
-        "anchor_date": last_date.strftime("%Y-%m-%d"),
-        "anchor_temp_c": round(last_temp, 1),
-        "recent_trend_c_per_day": round(recent_slope, 3),
-        "persistence_rho": round(rho, 4),
-        "days": forecast_days,
-    }
-    write_result("forecast", forecast_data)
-
-    write_result("synthesis", result)
-    return result
+    write_result("synthesis", synthesis_result)
+    return synthesis_result
 
 
 if __name__ == "__main__":
