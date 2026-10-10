@@ -1,0 +1,22 @@
+{
+  "location_name": "New Delhi, India",
+  "latitude": 28.6139,
+  "longitude": 77.209,
+  "elevation_m": 214.0,
+  "timezone": "Asia/Kolkata",
+  "start_date": "1950-01-01",
+  "end_date": "2026-10-07",
+  "total_observations": 28039,
+  "temperature_stats": {
+    "min_c": 12.3,
+    "max_c": 47.5,
+    "mean_c": 30.82,
+    "std_c": 6.8
+  },
+  "source": "Open-Meteo Historical Weather Archive API",
+  "underlying_model": "ECMWF ERA5 Reanalysis (0.25 deg grid resolution)",
+  "citation": "Open-Meteo.com Historical Weather Archive API (ERA5 Reanalysis by ECMWF). Data retrieved for New Delhi, India (28.6139 N, 77.209 E) spanning 1950-01-01 to 2026-10-07.",
+  "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+  "fetched_at": "2026-10-09T12:25:42.285938Z",
+  "description": "National Capital Region experiencing intense Urban Heat Island (UHI) dynamics and extreme summer heatwaves."
+}

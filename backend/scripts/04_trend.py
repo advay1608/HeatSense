@@ -53,23 +53,36 @@ def main():
             f"observed variation is consistent with noise around a flat mean."
         )
 
+    slope_stderr = float(reg.stderr) if reg.stderr is not None else 0.0
+    slope_ci95 = [
+        round(float(slope - 1.96 * slope_stderr), 6),
+        round(float(slope + 1.96 * slope_stderr), 6)
+    ]
+
     result = {
-        "slope_c_per_day": round(float(slope), 4),
-        "slope_p_value": round(float(p_value), 4),
-        "r_squared": round(float(r_squared), 4),
+        "slope_c_per_day": round(float(slope), 5),
+        "slope_c_per_decade": round(float(slope * 365.25 * 10), 3),
+        "slope_stderr": round(slope_stderr, 6),
+        "slope_ci95": slope_ci95,
+        "intercept_c": round(float(intercept), 3),
+        "slope_p_value": round(float(p_value), 5),
+        "r_squared": round(float(r_squared), 5),
+        "degrees_of_freedom": int(len(temps) - 2),
         "is_statistically_significant": is_significant,
         "total_drift_c": round(float(total_drift), 3),
         "practical_note": practical_note,
         "residuals_pattern_ok": residuals_pattern_ok,
         "residuals": [round(float(r), 3) for r in residuals],
         "day_index": [int(d) for d in day_index],
+        "dates": df["date"].dt.strftime("%Y-%m-%d").tolist(),
     }
 
     print("=== TREND ANALYSIS ===")
-    print(f"Slope: {result['slope_c_per_day']} C/day  (p={result['slope_p_value']}, "
-          f"R^2={result['r_squared']})")
-    print(f"Significant: {is_significant}")
-    print(practical_note)
+    print(f"Slope: {result['slope_c_per_day']} C/day ({result['slope_c_per_decade']} C/decade, SE: {result['slope_stderr']})")
+    print(f"95% CI for Slope: [{slope_ci95[0]}, {slope_ci95[1]}] C/day")
+    print(f"p-value: {result['slope_p_value']:.4e} | R^2: {result['r_squared']:.5f} (DF={result['degrees_of_freedom']})")
+    print(f"Statistically Significant (p < 0.05): {is_significant}")
+    print(f"Practical Note: {practical_note}")
 
     write_result("trend", result)
     return result

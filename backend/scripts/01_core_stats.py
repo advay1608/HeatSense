@@ -60,7 +60,15 @@ def main():
     std_ci = bootstrap_ci(temps, lambda d: np.std(d, ddof=1))
     cv_ci = bootstrap_ci(temps, cv_percent)
 
-    shapiro_stat, shapiro_p = stats.shapiro(temps)
+    if n > 5000:
+        rng = np.random.default_rng(RANDOM_SEED)
+        shapiro_sample = rng.choice(temps, size=5000, replace=False)
+        shapiro_stat, shapiro_p = stats.shapiro(shapiro_sample)
+    else:
+        shapiro_stat, shapiro_p = stats.shapiro(temps)
+
+    # D'Agostino-Pearson omnibus normality test (well-suited for large N)
+    dag_stat, dag_p = stats.normaltest(temps)
 
     result = {
         "n_days": int(n),
@@ -71,10 +79,20 @@ def main():
         "std_dev_ci95": std_ci,
         "cv_percent": round(float(cv), 2),
         "cv_percent_ci95": cv_ci,
+        "min_temp": round(float(np.min(temps)), 2),
+        "max_temp": round(float(np.max(temps)), 2),
+        "median_temp": round(float(np.median(temps)), 2),
+        "iqr": round(float(stats.iqr(temps)), 2),
         "shapiro_wilk": {
             "statistic": round(float(shapiro_stat), 4),
             "p_value": round(float(shapiro_p), 4),
             "is_normal_at_5pct": bool(shapiro_p >= 0.05),
+            "note": "Evaluated on N=5000 subsample per statistical standards" if n > 5000 else "Evaluated on full sample",
+        },
+        "dagostino_pearson": {
+            "statistic": round(float(dag_stat), 4),
+            "p_value": round(float(dag_p), 4),
+            "is_normal_at_5pct": bool(dag_p >= 0.05),
         },
         "manual_walkthrough": manual_walkthrough(temps, mean),
     }

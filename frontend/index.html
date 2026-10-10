@@ -1,92 +1,363 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Heat Risk Dashboard</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1a2e3b">
+  <title>HeatSense — Heat Risk Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-<div class="wrap">
+<body class="loading">
 
-  <header class="hd">
-    <div>
-      <p class="kicker">Statistical Identification of High-Temperature Risk</p>
-      <h1>Heat Risk Dashboard</h1>
-    </div>
-    <div class="meta" id="metaLine">loading…</div>
-  </header>
+  <!-- Scroll progress bar -->
+  <div class="scroll-progress" id="scrollProgress"></div>
 
-  <section class="chart-card">
-    <div class="chart-head">
-      <h2>Temperature record &amp; projection</h2>
-      <div class="legend">
-        <span><i class="sw solid"></i> recorded</span>
-        <span><i class="sw dash"></i> projected</span>
-        <span><i class="sw band"></i> ±1 / ±2 SD</span>
-        <span><i class="sw thr"></i> threshold</span>
-      </div>
-    </div>
-    <canvas id="timelineCanvas" height="280"></canvas>
-    <div class="scrollrow">
-      <input type="range" id="panSlider" min="0" max="100" value="100" aria-label="Pan timeline">
-      <span class="scrollhint">drag to look further back</span>
-    </div>
-  </section>
+  <!-- Toast container (fixed) -->
+  <div class="toast-container" id="toastContainer"></div>
 
-  <section class="grid2">
+  <!-- Canvas tooltip (fixed, follows mouse over timeline) -->
+  <div class="canvas-tooltip" id="canvasTooltip"></div>
 
-    <div class="card">
-      <h2>Threshold &amp; risk</h2>
-      <label class="slabel" for="thresholdSlider">
-        Extreme-heat threshold: <strong id="thresholdVal">--</strong> °C
-      </label>
-      <input type="range" id="thresholdSlider" min="28" max="42" step="0.5" value="36">
+  <!-- Help tooltip (fixed) -->
+  <div class="help-tooltip" id="helpTooltip"></div>
 
-      <div class="gaugewrap">
-        <div class="gauge">
-          <div class="gaugefill" id="gaugeFill"></div>
+  <div class="app-shell">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        <div class="sidebar-brand">
+          <div class="brand-logo">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="16" fill="url(#brandGrad)"/>
+              <path d="M16 8v10.5" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="16" cy="22" r="3.5" fill="#fff"/>
+              <path d="M10 12h2M20 12h2M10 16h2M20 16h2" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="brandGrad" x1="0" y1="0" x2="32" y2="32">
+                  <stop stop-color="#f4845f"/>
+                  <stop offset="1" stop-color="#c0392b"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">HeatSense</div>
+            <div class="brand-sub">Risk Dashboard</div>
+          </div>
         </div>
-        <div class="gaugelabels"><span>low</span><span>moderate</span><span>high</span></div>
+
+        <nav class="sidebar-nav" aria-label="Dashboard sections">
+          <a class="nav-item active" href="#overview" data-section="overview">
+            <svg class="nav-icon" viewBox="0 0 20 20"><rect x="2" y="2" width="7" height="7" rx="1.5" fill="currentColor" opacity=".7"/><rect x="11" y="2" width="7" height="7" rx="1.5" fill="currentColor" opacity=".7"/><rect x="2" y="11" width="7" height="7" rx="1.5" fill="currentColor" opacity=".7"/><rect x="11" y="11" width="7" height="7" rx="1.5" fill="currentColor" opacity=".7"/></svg>
+            Overview
+          </a>
+          <a class="nav-item" href="#controls" data-section="controls">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Controls
+          </a>
+          <a class="nav-item" href="#forecast" data-section="forecast">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M3 14l4-5 4 3 3-4 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Forecast
+          </a>
+          <a class="nav-item" href="#timeline" data-section="timeline">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M6 4V2M14 4V2M2 8h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Timeline
+          </a>
+          <a class="nav-item" href="#insights" data-section="insights">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="9" r="5" stroke="currentColor" stroke-width="1.8"/><path d="M10 14v4M8 18h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Insights
+          </a>
+          <a class="nav-item" href="#details" data-section="details">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h8M4 14h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Statistics
+          </a>
+        </nav>
+
+        <!-- Dark mode toggle -->
+        <button class="dark-toggle" id="darkToggle" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle dark mode">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="5"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+          <span class="dark-toggle-label">Dark mode</span>
+        </button>
+
+        <div class="sidebar-meta">
+          <div class="meta-dot"></div>
+          <span id="metaLine">Loading…</span>
+        </div>
+
+        <blockquote class="sidebar-quote">
+          "Understanding today's heat for a safer tomorrow."
+        </blockquote>
       </div>
+    </aside>
 
-      <div class="bignum">
-        <span id="probBig">--%</span>
-        <span class="bignum-sub" id="returnPeriod">--</span>
-      </div>
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main class="main-content">
 
-      <div class="modeltoggle" id="modelToggle"></div>
-      <p class="finenote">Live recompute is exact for the model used to build this snapshot; other models show their pre-computed value.</p>
-    </div>
+      <!-- Mobile topbar -->
+      <header class="topbar">
+        <button class="menu-btn" id="menuBtn" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-brand">HeatSense</div>
+        <div class="topbar-status">
+          <span class="status-dot"></span>
+          <span id="topbarStatus">Live</span>
+        </div>
+      </header>
 
-    <div class="card">
-      <h2>Three independent checks</h2>
-      <p class="cardsub">Same threshold, three different methods of estimating the probability.</p>
-      <table class="cmp" id="comparisonTable"></table>
+      <!-- ── SECTION 1: Overview / Risk Hero ── -->
+      <section class="section" id="overview">
+        <div class="hero-band" id="heroBand">
+          <div class="hero-text">
+            <p class="section-label hero-label" id="heroLabel">Extreme heat outlook</p>
+            <h1 class="hero-title">Know the heat<br><em>before it arrives.</em></h1>
+            <p class="hero-desc" id="heroDesc">A clear view of how often your chosen temperature is likely to be crossed, backed by four fitted probability models.</p>
+          </div>
+          <div class="hero-visual">
+            <div class="risk-card" aria-live="polite">
+              <div class="risk-card-header">
+                <span class="risk-label">Current heat risk</span>
+                <span class="risk-band-pill" id="riskBand">—</span>
+              </div>
 
-      <h2 class="mt">Core statistics</h2>
-      <table class="cmp" id="statsTable"></table>
-    </div>
+              <!-- Arc gauge (replaces flat gauge bar) -->
+              <div class="arc-gauge-wrap">
+                <svg class="arc-gauge-svg" viewBox="0 0 260 150" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%"   stop-color="#27ae60"/>
+                      <stop offset="42%"  stop-color="#e67e22"/>
+                      <stop offset="100%" stop-color="#e05a3a"/>
+                    </linearGradient>
+                  </defs>
+                  <!-- Background track -->
+                  <path class="arc-track" d="M 30 130 A 100 100 0 0 1 230 130"/>
+                  <!-- Colored fill (animated via dashoffset) -->
+                  <path class="arc-fill" id="arcFill" d="M 30 130 A 100 100 0 0 1 230 130"/>
+                  <!-- Needle dot at tip of fill -->
+                  <circle class="arc-needle" id="arcNeedle" cx="30" cy="130" r="7"/>
+                  <!-- Boundary ticks: low (5%) and moderate (15%) -->
+                  <line class="arc-tick" x1="30" y1="130" x2="30" y2="130" id="tickLow"/>
+                  <line class="arc-tick" x1="30" y1="130" x2="30" y2="130" id="tickMod"/>
+                  <!-- Center probability text -->
+                  <text class="arc-prob-text" id="arcProbText" x="130" y="112" text-anchor="middle">—%</text>
+                  <text class="arc-sub-text" x="130" y="132" text-anchor="middle">chance per day</text>
+                  <!-- Band label -->
+                  <text class="arc-band-text" id="arcBandText" x="130" y="148" text-anchor="middle">—</text>
+                </svg>
+              </div>
 
-  </section>
+              <p class="risk-return" id="returnPeriod"></p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  <section class="grid2">
-    <div class="card">
-      <h2>Assumption checks</h2>
-      <div id="assumptions"></div>
-    </div>
-    <div class="card">
-      <h2>Composite Heat Risk Index</h2>
-      <div id="synthesisBox"></div>
-    </div>
-  </section>
+      <!-- ── SECTION 2: Controls ── -->
+      <section class="section" id="controls">
+        <div class="section-header">
+          <p class="section-label">Interactive controls</p>
+          <h2 class="section-title">Adjust threshold &amp; model</h2>
+        </div>
 
-  <footer class="ft">
-    Numbers reflect a frozen snapshot of <code>backend/output/results.json</code>.
-    Refresh via <code>run_pipeline.py</code> then re-copy the snapshot — see ARCHITECTURE.md §4.
-  </footer>
+        <div class="controls-grid">
+          <!-- Threshold slider -->
+          <div class="control-card">
+            <div class="control-card-header">
+              <div class="control-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12M12 21a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M5 9h3M16 9h3M5 13h3M16 13h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/></svg>
+              </div>
+              <div>
+                <h3 class="control-title">Danger threshold</h3>
+                <p class="control-sub">What temperature counts as dangerous?</p>
+              </div>
+            </div>
+            <div class="slider-row">
+              <div class="slider-val-display">
+                <strong id="thresholdVal">36.0</strong><span>°C</span>
+              </div>
+              <!-- Tooltip bubble that floats above slider thumb -->
+              <div class="slider-tooltip-wrap">
+                <div class="slider-tooltip" id="sliderTooltip">36.0°C</div>
+                <input type="range" id="thresholdSlider" min="28" max="42" step="0.5" value="36" class="slider" aria-label="Temperature threshold">
+              </div>
+              <div class="slider-bounds"><span>28°C</span><span>42°C</span></div>
+            </div>
+          </div>
 
-</div>
-<script src="app.js"></script>
+          <!-- Model selector -->
+          <div class="control-card">
+            <div class="control-card-header">
+              <div class="control-icon-wrap control-icon-blue">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2.5"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".4"/><path d="M6.16 6.16a8 8 0 0011.62 11.62" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".4"/></svg>
+              </div>
+              <div>
+                <h3 class="control-title">Probability model</h3>
+                <p class="control-sub">Which distribution fits the data best?</p>
+              </div>
+            </div>
+            <div class="model-buttons" id="modelToggle"></div>
+            <p class="model-note" id="modelNote">Loading…</p>
+          </div>
+        </div>
+
+        <!-- Live model comparison (updates on slider drag) -->
+        <div class="live-comp-card">
+          <div class="live-comp-header">
+            <p class="section-label" style="margin:0">All models at <span id="liveCompThreshold">36.0</span>°C</p>
+            <span class="section-badge">Updates live as you drag</span>
+          </div>
+          <div class="live-comp-grid" id="liveCompGrid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION 3: 7-Day Forecast ── -->
+      <section class="section" id="forecast">
+        <div class="section-header">
+          <div>
+            <p class="section-label">Prediction window</p>
+            <h2 class="section-title">What the model expects next</h2>
+          </div>
+          <span class="section-badge" id="forecastNote">Loading…</span>
+        </div>
+        <div class="forecast-grid" id="forecastGrid">
+          <!-- Skeleton tiles -->
+          <div class="forecast-day skeleton-card"><div class="skel skel-sm"></div><div class="skel skel-lg"></div><div class="skel skel-sm"></div></div>
+          <div class="forecast-day skeleton-card"><div class="skel skel-sm"></div><div class="skel skel-lg"></div><div class="skel skel-sm"></div></div>
+          <div class="forecast-day skeleton-card"><div class="skel skel-sm"></div><div class="skel skel-lg"></div><div class="skel skel-sm"></div></div>
+          <div class="forecast-day skeleton-card"><div class="skel skel-sm"></div><div class="skel skel-lg"></div><div class="skel skel-sm"></div></div>
+          <div class="forecast-day skeleton-card"><div class="skel skel-sm"></div><div class="skel skel-lg"></div><div class="skel skel-sm"></div></div>
+          <div class="forecast-day skeleton-card"><div class="skel skel-sm"></div><div class="skel skel-lg"></div><div class="skel skel-sm"></div></div>
+          <div class="forecast-day skeleton-card"><div class="skel skel-sm"></div><div class="skel skel-lg"></div><div class="skel skel-sm"></div></div>
+        </div>
+      </section>
+
+      <!-- ── SECTION 4: Timeline ── -->
+      <section class="section" id="timeline">
+        <div class="section-header">
+          <div>
+            <p class="section-label">Observed evidence</p>
+            <h2 class="section-title">Where the threshold meets reality</h2>
+          </div>
+        </div>
+        <div class="chart-box" style="height: 340px; padding: 1rem;">
+          <canvas id="timelineCanvas" aria-label="Temperature timeline chart"></canvas>
+        </div>
+        <div class="pan-row">
+          <svg class="pan-icon" viewBox="0 0 20 20" fill="none"><path d="M5 10h10M5 10l3-3M5 10l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <input type="range" id="panSlider" min="0" max="100" value="100" class="slider pan-slider" aria-label="Pan timeline">
+          <span class="pan-hint">drag to look further back</span>
+        </div>
+      </section>
+
+      <!-- ── SECTION 5: Insights ── -->
+      <section class="section" id="insights">
+        <div class="section-header">
+          <p class="section-label">Analysis</p>
+          <h2 class="section-title">What the data tells us</h2>
+        </div>
+        <div class="insights-grid">
+          <article class="insight-card insight-primary" aria-live="polite">
+            <p class="section-label">The short answer</p>
+            <h3 class="insight-heading" id="takeawayTitle">Loading risk story…</h3>
+            <p class="insight-body" id="takeawayText">The selected threshold and its historical context will appear here.</p>
+            <div class="insight-stats">
+              <div class="insight-stat">
+                <strong id="observedCrossings">—</strong>
+                <span>days crossed threshold</span>
+              </div>
+              <div class="insight-stat">
+                <strong id="observedPeak">—</strong>
+                <span>highest recorded day</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="insight-card">
+            <p class="section-label">Confidence check</p>
+            <h3 class="insight-heading">Three ways to estimate it</h3>
+            <table class="data-table" id="comparisonTable"></table>
+          </article>
+        </div>
+
+        <!-- AIC / BIC model fit comparison chart -->
+        <div class="aic-chart-card">
+          <div class="section-header" style="margin-bottom:1rem">
+            <div>
+              <p class="section-label">Model fit quality</p>
+              <h3 class="insight-heading">AIC scores — lower is better fit <span class="help-icon" data-tip="Akaike Information Criterion (AIC) estimates relative model quality. Lower scores indicate a better fit."><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg></span></h3>
+            </div>
+            <span class="section-badge">Best model highlighted</span>
+          </div>
+          <div class="chart-box aic-chart-box">
+            <canvas id="aicChart" height="180" aria-label="AIC model comparison chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Threshold sensitivity chart -->
+        <div class="sensitivity-wrap">
+          <div class="section-header" style="margin-bottom:1rem">
+            <div>
+              <p class="section-label">Sensitivity analysis</p>
+              <h3 class="insight-heading">Exceedance probability at different thresholds</h3>
+            </div>
+          </div>
+          <div class="chart-box sensitivity-chart-box">
+            <canvas id="sensitivityChart" height="200" aria-label="Threshold sensitivity chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION 6: Statistics / Details ── -->
+      <section class="section" id="details">
+        <div class="section-header">
+          <p class="section-label">Deep dive</p>
+          <h2 class="section-title">Statistical details</h2>
+        </div>
+        <div class="details-grid">
+          <article class="detail-card detail-blue">
+            <div class="detail-accent"></div>
+            <p class="section-label">Core statistics</p>
+            <h3 class="detail-heading">Sample summary</h3>
+            <table class="data-table" id="statsTable"></table>
+          </article>
+
+          <article class="detail-card detail-green">
+            <div class="detail-accent"></div>
+            <p class="section-label">Trust signals</p>
+            <h3 class="detail-heading">Assumption checks</h3>
+            <div id="assumptions"></div>
+          </article>
+
+          <article class="detail-card detail-red">
+            <div class="detail-accent"></div>
+            <p class="section-label">Composite score</p>
+            <h3 class="detail-heading">Heat risk index <span class="help-icon" data-tip="A composite score combining base probability, recent trends, and temperature clustering."><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg></span></h3>
+            <div id="synthesisBox"></div>
+          </article>
+        </div>
+      </section>
+
+      <footer class="app-footer">
+        <span id="footerMeta">HeatSense · Frozen snapshot from <code>backend/output/results.json</code></span>
+        <span id="footerSync">Refresh after running the statistical pipeline</span>
+      </footer>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

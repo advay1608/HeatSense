@@ -15,3 +15,6 @@ Thumbs.db
 # NOTE: backend/output/results.json, backend/output/figures/, and
 # frontend/results.snapshot.json are intentionally NOT ignored — see
 # SYSTEM.md §5 for why they are committed to the repo.
+
+# Test & Debugging Artifacts
+screenshot*.png

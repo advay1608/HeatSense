@@ -27,10 +27,14 @@ CANDIDATES = {
 }
 
 
-def fit_and_score(dist, data: np.ndarray) -> dict:
-    params = dist.fit(data)
-    log_likelihood = np.sum(dist.logpdf(data, *params))
-    k = len(params)
+def fit_and_score(name: str, dist, data: np.ndarray) -> dict:
+    if name in ["lognorm", "gamma"] and data.min() > 0:
+        params = dist.fit(data, floc=0)
+        k = len(params) - 1
+    else:
+        params = dist.fit(data)
+        k = len(params)
+    log_likelihood = float(np.sum(dist.logpdf(data, *params)))
     n = len(data)
     aic = 2 * k - 2 * log_likelihood
     bic = k * np.log(n) - 2 * log_likelihood
@@ -40,14 +44,14 @@ def fit_and_score(dist, data: np.ndarray) -> dict:
 def params_to_dict(dist_name: str, params: tuple) -> dict:
     """Best-effort readable param names per distribution; falls back to generic."""
     if dist_name == "normal":
-        return {"loc": round(params[0], 4), "scale": round(params[1], 4)}
+        return {"loc": round(float(params[0]), 4), "scale": round(float(params[1]), 4)}
     if dist_name == "gumbel_r":
-        return {"loc": round(params[0], 4), "scale": round(params[1], 4)}
+        return {"loc": round(float(params[0]), 4), "scale": round(float(params[1]), 4)}
     if dist_name == "lognorm":
-        return {"s": round(params[0], 4), "loc": round(params[1], 4), "scale": round(params[2], 4)}
+        return {"s": round(float(params[0]), 4), "loc": round(float(params[1]), 4), "scale": round(float(params[2]), 4)}
     if dist_name == "gamma":
-        return {"a": round(params[0], 4), "loc": round(params[1], 4), "scale": round(params[2], 4)}
-    return {"raw": [round(p, 4) for p in params]}
+        return {"a": round(float(params[0]), 4), "loc": round(float(params[1]), 4), "scale": round(float(params[2]), 4)}
+    return {"raw": [round(float(p), 4) for p in params]}
 
 
 def holdout_validation(temps: np.ndarray, best_name: str, runner_up_name: str,
@@ -59,7 +63,10 @@ def holdout_validation(temps: np.ndarray, best_name: str, runner_up_name: str,
 
     def test_ll(name):
         dist = CANDIDATES[name]
-        params = dist.fit(train)
+        if name in ["lognorm", "gamma"] and train.min() > 0:
+            params = dist.fit(train, floc=0)
+        else:
+            params = dist.fit(train)
         return float(np.sum(dist.logpdf(test, *params)))
 
     return {
@@ -75,7 +82,7 @@ def main():
 
     scored = {}
     for name, dist in CANDIDATES.items():
-        scored[name] = fit_and_score(dist, temps)
+        scored[name] = fit_and_score(name, dist, temps)
 
     candidates_out = []
     for name, s in scored.items():
@@ -96,12 +103,18 @@ def main():
     qq = stats.probplot(temps, dist="norm")
     qq_r = qq[1][2]
 
+    # Check if canonical threshold is within sensible bounds of the dataset
+    threshold_c = THRESHOLD_C
+    if temps.max() <= threshold_c or temps.min() >= threshold_c:
+        threshold_c = round(float(np.percentile(temps, 90)), 1)
+        print(f"Notice: Canonical 36.0C outside range [{temps.min():.1f}, {temps.max():.1f}] — using 90th percentile: {threshold_c}C")
+
     best_dist = CANDIDATES[best_name]
     best_params = scored[best_name]["params"]
-    theoretical_probability = float(best_dist.sf(THRESHOLD_C, *best_params))
+    theoretical_probability = float(best_dist.sf(threshold_c, *best_params))
 
     result = {
-        "threshold_c": THRESHOLD_C,
+        "threshold_c": threshold_c,
         "candidates": candidates_out,
         "best_model": best_name,
         "holdout_validation": holdout,
@@ -115,7 +128,7 @@ def main():
     print(f"Best model: {best_name}")
     print(f"Holdout test log-likelihood — best: {holdout['best_model_test_log_likelihood']}, "
           f"runner-up: {holdout['runner_up_test_log_likelihood']}")
-    print(f"P(temp > {THRESHOLD_C}C) under {best_name} = {theoretical_probability:.4f}")
+    print(f"P(temp > {threshold_c}C) under {best_name} = {theoretical_probability:.4f}")
 
     write_result("distribution_fit", result)
     return result
