@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "project": "HeatSense \u2014 Statistical Identification of High-Temperature Risk",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "country": "India",
+    "location": "Mumbai, Maharashtra, India",
+    "coordinates": {
+      "latitude": 19.086115,
+      "longitude": 72.85291,
+      "elevation_m": 6.0
+    },
+    "variable": "temperature_2m_max",
+    "units": "degrees Celsius (\u00b0C)",
+    "timezone": "Asia/Kolkata",
+    "source": "Open-Meteo Historical Weather API / ECMWF ERA5",
+    "date_range": {
+      "start": "1950-01-01",
+      "end": "2026-10-10"
+    },
+    "exported_at": "2026-10-10T18:20:54.362024"
+  },
+  "sample_metrics": {
+    "n_observations": 28042,
+    "n_missing": 0,
+    "mean_c": 30.237,
+    "mean_95ci_c": [
+      30.208,
+      30.265
+    ],
+    "median_c": 30.2,
+    "min_c": 22.1,
+    "max_c": 41.3,
+    "range_c": 19.2,
+    "q1_c": 28.3,
+    "q3_c": 32.0,
+    "iqr_c": 3.7,
+    "variance": 5.699,
+    "std_dev_c": 2.387,
+    "std_dev_95ci_c": [
+      2.37,
+      2.405
+    ],
+    "cv_kelvin_percent": 0.79,
+    "cv_celsius_percent": 7.9,
+    "cv_interpretation_warning": "Celsius is an interval temperature scale with an arbitrary zero point (0\u00b0C = 273.15 K). Therefore, presenting CV = (s / mean_C) * 100% as a physically meaningful relative variability percentage is statistically invalid, as its numerical value changes arbitrarily under affine shifts. On the true ratio Kelvin scale, relative dispersion is 0.79% (s / mean_K, where mean_K = 303.39 K)."
+  },
+  "threshold_analysis": {
+    "canonical_threshold_c": 36.0,
+    "exceedance_rule": "temperature > 36.0\u00b0C",
+    "exceedance_count": 265,
+    "empirical_probability": 0.0095,
+    "empirical_average_spacing_days": 105.26
+  },
+  "secular_trend": {
+    "complete_calendar_years_period": "1950-2025 (76 complete calendar years)",
+    "complete_years_slope_c_per_decade": 0.1128,
+    "complete_years_slope_95ci_decade": [
+      0.0725,
+      0.1532
+    ],
+    "complete_years_p_value": 5.462957234363306e-07,
+    "complete_years_p_value_formatted": "< 0.0001 (approx 5.46e-07)",
+    "complete_years_r_squared": 0.2892,
+    "partial_year_disclosure": "2026 (partial record through Oct 10, excluded from annual trend to prevent seasonal bias)",
+    "full_period_daily_slope_c_per_decade": 0.1192,
+    "full_period_total_drift_c": 0.915
+  },
+  "model_selection": {
+    "best_candidate_model": "lognorm",
+    "lowest_aic": 128123.52,
+    "all_candidates_inadequate": true,
+    "goodness_of_fit_diagnostic": "A model possessing the lowest AIC among candidates does NOT mean it provides a good absolute fit. Formal Kolmogorov-Smirnov goodness-of-fit testing rejects all candidate single distributions (p < 0.0001) due to strong annual seasonal cycles (cold winters vs. hot summers). The best candidate (lognorm) serves only as a relative parametric approximation; the empirical exceedance rate (0.95%) is the primary, directly verifiable baseline."
+  },
+  "serial_dependence": {
+    "lag1_autocorrelation": 0.9039,
+    "mean_heatwave_run_length_days": 1.63,
+    "max_run_length_days": 5,
+    "pct_days_in_clusters": 64.9
+  },
+  "heat_risk_index_audit": {
+    "exploratory_score": 1.05,
+    "risk_band": "low",
+    "is_calibrated_probability": false,
+    "status": "Exploratory uncalibrated operational decision support score (0-100 scale)",
+    "components": {
+      "base_probability": 0.0095,
+      "base_probability_type": "empirical_exceedance_rate",
+      "theoretical_model_probability": 0.0121,
+      "trend_adjustment": 0.0915,
+      "clustering_adjustment": 0.0189
+    },
+    "audit_notice": "index_score (0-100) = [empirical_exceedance_rate * (1 + trend_adjustment) * (1 + clustering_adjustment)] * 100. This metric is an exploratory composite decision-support indicator, NOT a formal calibrated statistical probability."
+  }
+}
