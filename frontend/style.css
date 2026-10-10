@@ -672,10 +672,115 @@ canvas { display: block; }
 .forecast-day-range { font-size: 0.67rem; color: var(--ink-3); }
 .forecast-day-prob  { font-size: 0.7rem; font-weight: 600; color: var(--green-dark); margin-top: auto; }
 
-.forecast-day.hot { border-color: #f5c5b5; background: linear-gradient(to bottom, #fff8f6, #fff); border-top: 3px solid var(--red); }
-[data-theme="dark"] .forecast-day.hot { background: linear-gradient(to bottom, rgba(224,90,58,.1), var(--surface)); }
-.forecast-day.hot .forecast-day-temp { color: var(--red); }
-.forecast-day.hot .forecast-day-prob { color: var(--red); }
+.forecast-day.today {
+  border-color: #f8c291;
+  border-top: 3px solid #e67e22;
+  background: linear-gradient(to bottom, #fffdfa, var(--surface));
+}
+[data-theme="dark"] .forecast-day.today {
+  border-color: #b7791f;
+  border-top: 3px solid #e67e22;
+  background: linear-gradient(to bottom, rgba(230, 126, 34, 0.12), var(--surface));
+}
+
+.forecast-phase-badge {
+  display: inline-block;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+}
+.forecast-phase-badge.today {
+  background: #fef08a;
+  color: #854d0e;
+}
+[data-theme="dark"] .forecast-phase-badge.today {
+  background: rgba(234, 179, 8, 0.25);
+  color: #fef08a;
+}
+.forecast-phase-badge.future {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+[data-theme="dark"] .forecast-phase-badge.future {
+  background: rgba(14, 165, 233, 0.22);
+  color: #7dd3fc;
+}
+
+.forecast-prob-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #c0392b;
+  background: rgba(192, 57, 43, 0.08);
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-top: 2px;
+  display: inline-block;
+  width: fit-content;
+}
+[data-theme="dark"] .forecast-prob-badge {
+  background: rgba(231, 76, 60, 0.2);
+  color: #ff7675;
+}
+
+.forecast-ci-text {
+  font-size: 0.62rem;
+  color: var(--ink-3);
+  font-family: monospace;
+}
+
+.forecast-val-badge {
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding-top: 0.25rem;
+  border-top: 1px dotted var(--border);
+  margin-top: auto;
+}
+.forecast-val-badge.val-ok {
+  color: #27ae60;
+}
+.forecast-val-badge.val-pending {
+  color: var(--ink-3);
+}
+.forecast-val-badge.val-excluded {
+  color: var(--amber);
+}
+[data-theme="dark"] .forecast-val-badge.val-excluded {
+  color: #f39c12;
+}
+
+.forecast-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+@media (max-width: 48rem) {
+  .forecast-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.forecast-info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.1rem 1.25rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.forecast-info-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
 /* ── 14. Skeleton screens ───────────────────────────────────── */
 @keyframes shimmer {
@@ -1036,7 +1141,191 @@ body:not(.loading) .skeleton-card { display: none; }
   .hero-title { font-size: 2rem; }
 }
 
-/* ── 23. Reduced motion ─────────────────────────────────────── */
+
+/* ── 22b. Statistical Diagnostics & Seasonality ──────────────── */
+.hero-crosscheck {
+  font-size: 0.74rem;
+  color: var(--ink-3);
+  margin-top: 0.4rem;
+  text-align: center;
+}
+.hero-crosscheck strong {
+  color: var(--ink-2);
+}
+
+.gof-diagnostic-note {
+  margin-top: 0.85rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  background: rgba(230,126,34,.08);
+  border: 1px solid rgba(230,126,34,.25);
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+[data-theme="dark"] .gof-diagnostic-note {
+  background: rgba(230,126,34,.12);
+  border-color: rgba(230,126,34,.35);
+  color: var(--ink);
+}
+
+.seasonal-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-top: 1.25rem;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.forecast-day-status {
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-top: auto;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--border);
+}
+.forecast-day-status.status-above {
+  color: var(--red);
+}
+.forecast-day-status.status-below {
+  color: var(--green-dark);
+}
+[data-theme="dark"] .forecast-day-status.status-below {
+  color: #2ecc71;
+}
+
+.forecast-source-badge {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+  margin-top: 0.15rem;
+}
+
+/* ── 23. Exports & Downloads ────────────────────────────────── */
+.exports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.export-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.export-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--blue);
+}
+
+.export-card-featured {
+  border-color: rgba(224, 90, 58, 0.4);
+  background: linear-gradient(180deg, var(--surface) 0%, rgba(224, 90, 58, 0.03) 100%);
+}
+
+.export-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: rgba(224, 90, 58, 0.1);
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.export-card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.export-icon-blue {
+  background: rgba(41, 128, 185, 0.1);
+  color: var(--blue);
+}
+
+.export-icon-gold {
+  background: rgba(230, 126, 34, 0.12);
+  color: var(--amber);
+}
+
+.export-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.4rem;
+}
+
+.export-desc {
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin-bottom: 0.85rem;
+  flex-grow: 1;
+}
+
+.export-meta {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+}
+
+.export-card-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: auto;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--red);
+  color: #fff;
+  border: 1px solid var(--red);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  flex: 1;
+  text-align: center;
+}
+
+.export-btn:hover {
+  background: var(--red-dark);
+  border-color: var(--red-dark);
+  color: #fff;
+}
+
+.export-btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--border-dark);
+}
+
+.export-btn-outline:hover {
+  background: var(--surface-2);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* ── 24. Reduced motion ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation: none !important;
