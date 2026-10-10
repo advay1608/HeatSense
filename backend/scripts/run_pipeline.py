@@ -7,11 +7,10 @@ See ARCHITECTURE.md §6 for why this exact order is required.
 Usage:
     python backend/scripts/run_pipeline.py
     python backend/scripts/run_pipeline.py --fetch-api
-    python backend/scripts/run_pipeline.py --fetch-api --city mumbai
-    python backend/scripts/run_pipeline.py --fetch-api --city delhi --start-date 1950-01-01
+    python backend/scripts/run_pipeline.py --fetch-api --start-date 1950-01-01
 
 If --fetch-api is specified (or if backend/data/dataset.csv does not exist yet),
-fetches real all-time meteorological records via Open-Meteo Archive API.
+fetches real all-time meteorological records via Open-Meteo Archive API and NWP forecast.
 After execution, automatically syncs results to frontend/results.snapshot.json.
 """
 
@@ -25,9 +24,15 @@ import sys
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, THIS_DIR)
 
-DATA_PATH = os.path.join(THIS_DIR, "..", "data", "dataset.csv")
-RESULTS_PATH = os.path.join(THIS_DIR, "..", "output", "results.json")
-SNAPSHOT_PATH = os.path.join(THIS_DIR, "..", "..", "frontend", "results.snapshot.json")
+from config import (
+    REQUESTED_LATITUDE,
+    REQUESTED_LONGITUDE,
+    LOCATION_NAME,
+    DEFAULT_START_DATE,
+    DATA_PATH,
+    RESULTS_PATH,
+    SNAPSHOT_PATH,
+)
 
 PIPELINE = [
     "01_core_stats",
@@ -37,6 +42,7 @@ PIPELINE = [
     "05_dependence",
     "06_synthesis",
     "07_visualizations",
+    "generate_exports",
 ]
 
 
@@ -49,12 +55,12 @@ def sync_frontend_snapshot():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Execute full HeatSense statistical pipeline.")
+    parser = argparse.ArgumentParser(description="Execute full HeatSense statistical pipeline for Mumbai.")
     parser.add_argument("--fetch-api", action="store_true", help="Fetch live all-time data from Open-Meteo API first")
-    parser.add_argument("--city", default="delhi", help="City preset for API fetch (e.g. delhi, mumbai, phoenix, london)")
-    parser.add_argument("--lat", type=float, default=None, help="Custom latitude")
-    parser.add_argument("--lon", type=float, default=None, help="Custom longitude")
-    parser.add_argument("--start-date", default="1950-01-01", help="Start date for API fetch (default: 1950-01-01)")
+    parser.add_argument("--lat", type=float, default=REQUESTED_LATITUDE, help=f"Latitude (default: {REQUESTED_LATITUDE} for Mumbai)")
+    parser.add_argument("--lon", type=float, default=REQUESTED_LONGITUDE, help=f"Longitude (default: {REQUESTED_LONGITUDE} for Mumbai)")
+    parser.add_argument("--name", type=str, default=LOCATION_NAME, help="Location name")
+    parser.add_argument("--start-date", default=DEFAULT_START_DATE, help="Start date for API fetch (default: 1950-01-01)")
     parser.add_argument("--end-date", default=None, help="End date for API fetch (default: latest available)")
 
     args = parser.parse_args()
@@ -66,11 +72,12 @@ def main():
         print("=" * 60)
         fetcher = importlib.import_module("00_fetch_weather_data")
         fetcher.ingest_data(
-            city_key=args.city,
             latitude=args.lat,
             longitude=args.lon,
+            location_name=args.name,
             start_date=args.start_date,
             end_date=args.end_date,
+            force_fetch=args.fetch_api,
         )
 
     # Ensure dataset_info is present in results.json from dataset_metadata.json if available
@@ -83,6 +90,17 @@ def main():
                 write_result("dataset_info", meta_data)
         except Exception as e:
             print(f"Warning: Could not sync dataset_metadata.json: {e}")
+
+    # Ensure forecast data is present and synchronized with audited validation rules
+    try:
+        from common import read_results
+        curr_res = read_results()
+        fc_val = curr_res.get("forecast", {}).get("validation_summary", {})
+        if "forecast" not in curr_res or "validation_summary" not in curr_res.get("forecast", {}) or fc_val.get("n_validated_pairs") != 0:
+            fetcher = importlib.import_module("00_fetch_weather_data")
+            fetcher.fetch_open_meteo_forecast(latitude=args.lat, longitude=args.lon)
+    except Exception as e:
+        print(f"Warning: Could not sync forecast: {e}")
 
     for step in PIPELINE:
         print(f"\n{'='*60}\nRunning {step}.py\n{'='*60}")
