@@ -12,7 +12,7 @@
 # Partial Observation Year: 2026 (283 days through 2026-10-10)
 # Canonical Heat Threshold: 36.0 degC (Exceedance Rule: temperature > 36.0 degC)
 # Historical Days Exceeding 36.0 degC: 265 (0.95% empirical rate)
-# Export Generated: 2026-10-11 13:01:17 UTC
+# Export Generated: 2026-10-11 13:59:05 UTC
 # Reanalysis Notice: Data reflects ECMWF ERA5 ~0.25-deg grid areal average, not a single point station sensor.
 # ==========================================================================
 date,max_temp_c,units,exceeds_threshold_36c,year,month,day,season
