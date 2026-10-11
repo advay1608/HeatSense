@@ -1,22 +1,22 @@
 Category,Metric,Value,Unit,95% Confidence Interval,Notes
 Metadata,Location & ERA5 Grid Point,"Mumbai, Maharashtra, India",text,—,ECMWF ERA5 ~0.25° grid point reanalysis (not a single weather station)
-Metadata,Observation Period,1950-01-01 to 2026-10-10,dates,—,76.7 years continuous daily records
-Sample Size,Total Valid Observations,28042,days,—,Zero missing records
+Metadata,Observation Period,1950-01-01 to 2026-10-11,dates,—,76.7 years continuous daily records
+Sample Size,Total Valid Observations,28043,days,—,Zero missing records
 Central Tendency,Sample Mean,30.24,°C,"[30.208, 30.265]",Bootstrap percentile CI
 Central Tendency,Sample Median,30.20,°C,—,50th percentile
 Extremes,All-Time Minimum,22.1,°C,—,Recorded in mild coastal winter
 Extremes,All-Time Maximum,41.3,°C,—,Recorded during peak pre/post-monsoon surge
 Dispersion,Temperature Range,19.2,°C,—,Max minus Min
 Dispersion,Interquartile Range (IQR),3.70,°C,—,"Q1=28.3°C, Q3=32.0°C"
-Dispersion,Sample Variance,5.699,°C²,—,s² with Bessel's correction
-Dispersion,Standard Deviation,2.387,°C,"[2.37, 2.405]",Bootstrap CI
+Dispersion,Sample Variance,5.701,°C²,—,s² with Bessel's correction
+Dispersion,Standard Deviation,2.388,°C,"[2.37, 2.405]",Bootstrap CI
 Dispersion,Kelvin Relative Dispersion (CV),0.790,%,—,Thermodynamic ratio scale (Kelvin; mean_K = 303.39 K)
-Threshold Exceedance,Exceedance Count (> 36.0°C),265,days,—,Rule: temperature > 36.0°C
-Threshold Exceedance,Empirical Exceedance Rate,0.95,%,—,Ground truth baseline (265 / 28042)
+Threshold Exceedance,Exceedance Count (> 36.0°C),266,days,—,Rule: temperature > 36.0°C
+Threshold Exceedance,Empirical Exceedance Rate,0.95,%,—,Ground truth baseline (266 / 28043)
 Threshold Exceedance,Empirical Average Spacing (1/P),105.26,days,—,Inverse empirical rate (average spacing; not a regular schedule due to heatwave clustering)
 Secular Trend,Complete Years Trend (1950-2025),+0.1128,°C/decade,"[0.0725, 0.1532]","p=< 0.0001 (approx 5.46e-07), R²=0.2892 (76 complete calendar years, excludes partial 2026)"
-Serial Dependence,Lag-1 Autocorrelation,0.9039,dimensionless,—,High temporal persistence
-Serial Dependence,Mean Heatwave Cluster Run,1.63,days,—,64.9% days occur in multi-day runs
-Model Selection,Best Parametric Candidate,Lognorm,model,—,"Lowest AIC (128,123.5)"
+Serial Dependence,Lag-1 Autocorrelation,0.9040,dimensionless,—,High temporal persistence
+Serial Dependence,Mean Heatwave Cluster Run,1.63,days,—,65.0% days occur in multi-day runs
+Model Selection,Best Parametric Candidate,Lognorm,model,—,"Lowest AIC (128,135.0)"
 Model Diagnostics,Kolmogorov-Smirnov Test,Rejected (p < 0.0001),diagnostic,—,All candidate unimodal distributions rejected due to seasonal cycles
 Risk Index,Exploratory Heat Risk Index,1.05,score (0-100),—,Band: low (Uncalibrated operational severity index)

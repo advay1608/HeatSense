@@ -16,12 +16,12 @@
     "source": "Open-Meteo Historical Weather API / ECMWF ERA5",
     "date_range": {
       "start": "1950-01-01",
-      "end": "2026-10-10"
+      "end": "2026-10-11"
     },
-    "exported_at": "2026-10-10T18:20:54.362024"
+    "exported_at": "2026-10-11T12:37:47.559618"
   },
   "sample_metrics": {
-    "n_observations": 28042,
+    "n_observations": 28043,
     "n_missing": 0,
     "mean_c": 30.237,
     "mean_95ci_c": [
@@ -35,8 +35,8 @@
     "q1_c": 28.3,
     "q3_c": 32.0,
     "iqr_c": 3.7,
-    "variance": 5.699,
-    "std_dev_c": 2.387,
+    "variance": 5.701,
+    "std_dev_c": 2.388,
     "std_dev_95ci_c": [
       2.37,
       2.405
@@ -48,7 +48,7 @@
   "threshold_analysis": {
     "canonical_threshold_c": 36.0,
     "exceedance_rule": "temperature > 36.0\u00b0C",
-    "exceedance_count": 265,
+    "exceedance_count": 266,
     "empirical_probability": 0.0095,
     "empirical_average_spacing_days": 105.26
   },
@@ -63,20 +63,20 @@
     "complete_years_p_value_formatted": "< 0.0001 (approx 5.46e-07)",
     "complete_years_r_squared": 0.2892,
     "partial_year_disclosure": "2026 (partial record through Oct 10, excluded from annual trend to prevent seasonal bias)",
-    "full_period_daily_slope_c_per_decade": 0.1192,
-    "full_period_total_drift_c": 0.915
+    "full_period_daily_slope_c_per_decade": 0.1194,
+    "full_period_total_drift_c": 0.916
   },
   "model_selection": {
     "best_candidate_model": "lognorm",
-    "lowest_aic": 128123.52,
+    "lowest_aic": 128135.02,
     "all_candidates_inadequate": true,
     "goodness_of_fit_diagnostic": "A model possessing the lowest AIC among candidates does NOT mean it provides a good absolute fit. Formal Kolmogorov-Smirnov goodness-of-fit testing rejects all candidate single distributions (p < 0.0001) due to strong annual seasonal cycles (cold winters vs. hot summers). The best candidate (lognorm) serves only as a relative parametric approximation; the empirical exceedance rate (0.95%) is the primary, directly verifiable baseline."
   },
   "serial_dependence": {
-    "lag1_autocorrelation": 0.9039,
+    "lag1_autocorrelation": 0.904,
     "mean_heatwave_run_length_days": 1.63,
     "max_run_length_days": 5,
-    "pct_days_in_clusters": 64.9
+    "pct_days_in_clusters": 65.0
   },
   "heat_risk_index_audit": {
     "exploratory_score": 1.05,
@@ -86,8 +86,8 @@
     "components": {
       "base_probability": 0.0095,
       "base_probability_type": "empirical_exceedance_rate",
-      "theoretical_model_probability": 0.0121,
-      "trend_adjustment": 0.0915,
+      "theoretical_model_probability": 0.0122,
+      "trend_adjustment": 0.0916,
       "clustering_adjustment": 0.0189
     },
     "audit_notice": "index_score (0-100) = [empirical_exceedance_rate * (1 + trend_adjustment) * (1 + clustering_adjustment)] * 100. This metric is an exploratory composite decision-support indicator, NOT a formal calibrated statistical probability."

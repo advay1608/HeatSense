@@ -6,13 +6,13 @@
 # Primary Variable: temperature_2m_max (Daily Maximum 2-meter Air Temperature)
 # Measurement Units: degrees Celsius (degC)
 # Data Source: Open-Meteo Historical Weather Archive API / ECMWF ERA5 Reanalysis
-# Coverage Period: 1950-01-01 to 2026-10-10
-# Valid Daily Observations: 28,042 | Missing Values: 0 | Duplicate Dates: 0
+# Coverage Period: 1950-01-01 to 2026-10-11
+# Valid Daily Observations: 28,043 | Missing Values: 0 | Duplicate Dates: 0
 # Complete Calendar Years: 1950 to 2025 (76 complete years, 27,759 days)
 # Partial Observation Year: 2026 (283 days through 2026-10-10)
 # Canonical Heat Threshold: 36.0 degC (Exceedance Rule: temperature > 36.0 degC)
-# Historical Days Exceeding 36.0 degC: 265 (0.95% empirical rate)
-# Export Generated: 2026-10-10 18:20:54 UTC
+# Historical Days Exceeding 36.0 degC: 266 (0.95% empirical rate)
+# Export Generated: 2026-10-11 12:37:47 UTC
 # Reanalysis Notice: Data reflects ECMWF ERA5 ~0.25-deg grid areal average, not a single point station sensor.
 # ==========================================================================
 date,max_temp_c,units,exceeds_threshold_36c,year,month,day,season
@@ -28057,4 +28057,5 @@ date,max_temp_c,units,exceeds_threshold_36c,year,month,day,season
 2026-10-07,36.2,degC,1,2026,10,7,Post-Monsoon
 2026-10-08,37.0,degC,1,2026,10,8,Post-Monsoon
 2026-10-09,37.8,degC,1,2026,10,9,Post-Monsoon
-2026-10-10,37.6,degC,1,2026,10,10,Post-Monsoon
+2026-10-10,37.8,degC,1,2026,10,10,Post-Monsoon
+2026-10-11,37.2,degC,1,2026,10,11,Post-Monsoon

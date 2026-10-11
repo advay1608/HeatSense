@@ -200,7 +200,7 @@
         <strong>Source:</strong> ECMWF ERA5 via Open-Meteo API
       </p>
       <p class="meta-line">
-        <strong>Observation Coverage:</strong> 1950-01-01 to 2026-10-10 (<strong>28,042 consecutive daily observations</strong>, 0 missing)
+        <strong>Observation Coverage:</strong> 1950-01-01 to 2026-10-11 (<strong>28,043 consecutive daily observations</strong>, 0 missing)
       </p>
     </header>
 
@@ -221,7 +221,7 @@
 
       <div class="stat-grid">
         <div class="stat-card">
-          <div class="stat-val">28,042</div>
+          <div class="stat-val">28,043</div>
           <div class="stat-lbl">Sample Size (Days)</div>
         </div>
         <div class="stat-card">
@@ -261,13 +261,13 @@
         <tbody>
           <tr><td>Sample Mean</td><td>x̄ = (1/n) Σ x_i</td><td>30.24°C</td><td>[30.208, 30.265]°C</td></tr>
           <tr><td>Median</td><td>Q2 (50th percentile)</td><td>30.20°C</td><td>—</td></tr>
-          <tr><td>Sample Variance</td><td>s² = Σ (x_i - x̄)² / (n - 1)</td><td>5.699 °C²</td><td>—</td></tr>
-          <tr><td>Standard Deviation</td><td>s = √(s²)</td><td>2.387°C</td><td>[2.37, 2.405]°C</td></tr>
+          <tr><td>Sample Variance</td><td>s² = Σ (x_i - x̄)² / (n - 1)</td><td>5.701 °C²</td><td>—</td></tr>
+          <tr><td>Standard Deviation</td><td>s = √(s²)</td><td>2.388°C</td><td>[2.37, 2.405]°C</td></tr>
           <tr><td>Quartiles (Q1, Q3)</td><td>25th &amp; 75th percentiles</td><td>Q1 = 28.3°C, Q3 = 32.0°C</td><td>—</td></tr>
           <tr><td>Interquartile Range</td><td>IQR = Q3 - Q1</td><td>3.70°C</td><td>—</td></tr>
           <tr><td>Extreme Range</td><td>Max - Min</td><td>19.2°C (22.1°C to 41.3°C)</td><td>—</td></tr>
           <tr><td>Thermodynamic Relative Dispersion (Kelvin CV)</td><td>CV_K = s / (x̄ + 273.15)</td><td><strong>0.79%</strong></td><td>Thermodynamic ratio scale (Kelvin; x̄_K = 303.39 K)</td></tr>
-          <tr><td>Analytical Heat Exceedance (&gt; 36.0°C)</td><td>T &gt; 36.0°C (strict rule)</td><td><strong>265 days (0.95%)</strong></td><td>Average spacing: 105.3 days</td></tr>
+          <tr><td>Analytical Heat Exceedance (&gt; 36.0°C)</td><td>T &gt; 36.0°C (strict rule)</td><td><strong>266 days (0.95%)</strong></td><td>Average spacing: 105.3 days</td></tr>
         </tbody>
       </table>
       <div class="callout callout-warn">
@@ -292,44 +292,44 @@
           
         <tr style="">
             <td><strong>Normal</strong></td>
-            <td>-64,190.6</td>
-            <td>128,385.2</td>
-            <td>261.7</td>
-            <td>128,401.7</td>
-            <td>D = 0.0597 (p < 0.0001 (approx 1.94e-87))</td>
+            <td>-64,196.9</td>
+            <td>128,397.8</td>
+            <td>262.8</td>
+            <td>128,414.3</td>
+            <td>D = 0.0597 (p < 0.0001 (approx 2.01e-87))</td>
             <td>0.79%</td>
             <td><span class="badge badge-danger">Rejected</span></td>
         </tr>
         
         <tr style="background: rgba(41, 128, 185, 0.08); font-weight: 600;">
             <td><strong>Lognorm (Best AIC)</strong></td>
-            <td>-64,059.8</td>
-            <td>128,123.5</td>
+            <td>-64,065.5</td>
+            <td>128,135.0</td>
             <td>0.0</td>
-            <td>128,140.0</td>
-            <td>D = 0.0539 (p < 0.0001 (approx 3.91e-71))</td>
-            <td>1.21%</td>
+            <td>128,151.5</td>
+            <td>D = 0.0539 (p < 0.0001 (approx 4.03e-71))</td>
+            <td>1.22%</td>
             <td><span class="badge badge-danger">Rejected</span></td>
         </tr>
         
         <tr style="">
             <td><strong>Gamma</strong></td>
-            <td>-64,079.8</td>
-            <td>128,163.5</td>
-            <td>40.0</td>
-            <td>128,180.0</td>
-            <td>D = 0.0558 (p < 0.0001 (approx 2.50e-76))</td>
+            <td>-64,085.7</td>
+            <td>128,175.4</td>
+            <td>40.4</td>
+            <td>128,191.9</td>
+            <td>D = 0.0558 (p < 0.0001 (approx 2.57e-76))</td>
             <td>1.06%</td>
             <td><span class="badge badge-danger">Rejected</span></td>
         </tr>
         
         <tr style="">
             <td><strong>Gumbel_r</strong></td>
-            <td>-64,883.6</td>
-            <td>129,771.1</td>
-            <td>1,647.6</td>
-            <td>129,787.6</td>
-            <td>D = 0.0738 (p < 0.0001 (approx 3.96e-133))</td>
+            <td>-64,888.2</td>
+            <td>129,780.4</td>
+            <td>1,645.4</td>
+            <td>129,796.9</td>
+            <td>D = 0.0737 (p < 0.0001 (approx 4.36e-133))</td>
             <td>4.01%</td>
             <td><span class="badge badge-danger">Rejected</span></td>
         </tr>
@@ -393,12 +393,12 @@
         <tr>
             <td><strong>Post-Monsoon</strong></td>
             <td>10, 11</td>
-            <td>4,646</td>
+            <td>4,647</td>
             <td>31.15°C</td>
             <td>22.5°C</td>
             <td>37.8°C</td>
-            <td>7</td>
-            <td><strong>0.15%</strong></td>
+            <td>8</td>
+            <td><strong>0.17%</strong></td>
         </tr>
         
         </tbody>
@@ -431,16 +431,16 @@
             <td>Full Continuous Daily Record</td>
             <td>1950-01-01 to 2026-10-10</td>
             <td>28,042 days</td>
-            <td>+0.1192°C / decade</td>
-            <td>[0.1066, 0.1317]°C/dec</td>
-            <td>R² = 0.0122</td>
-            <td>< 0.0001 (approx 4.45e-77)</td>
+            <td>+0.1194°C / decade</td>
+            <td>[0.1068, 0.1319]°C/dec</td>
+            <td>R² = 0.0123</td>
+            <td>< 0.0001 (approx 2.66e-77)</td>
           </tr>
         </tbody>
       </table>
       <div class="callout">
         <div class="callout-title">Statistical Autocorrelation &amp; Trend Inference Limitations</div>
-        Daily temperature series exhibit high serial correlation (ρ₁ = 0.9039), which artificially inflates nominal degrees of freedom and narrows daily OLS standard errors.
+        Daily temperature series exhibit high serial correlation (ρ₁ = 0.9040), which artificially inflates nominal degrees of freedom and narrows daily OLS standard errors.
         While aggregating into complete calendar years eliminates day-to-day autocorrelation and avoids seasonal truncation bias, annual averages cannot be assumed strictly independent without qualification.
         Multi-year climatic oscillations (e.g., ENSO, Indian Ocean Dipole, and monsoon variability) introduce inter-annual memory, meaning regression p-values and confidence intervals must be interpreted with caution.
       </div>
@@ -452,10 +452,10 @@
         Heat does not arrive as isolated random days. Serial dependence analysis demonstrates persistence:
       </p>
       <ul>
-        <li><strong>Lag-1 Autocorrelation:</strong> ρ₁ = 0.9039 (Weekly persistence ρ₇ = 0.648).</li>
-        <li><strong>Cluster Concentration:</strong> 64.9% of extreme days occur inside multi-day runs.</li>
+        <li><strong>Lag-1 Autocorrelation:</strong> ρ₁ = 0.9040 (Weekly persistence ρ₇ = 0.648).</li>
+        <li><strong>Cluster Concentration:</strong> 65.0% of extreme days occur inside multi-day runs.</li>
         <li><strong>Mean Heatwave Run Length:</strong> 1.63 consecutive days above 36.0°C (All-time longest run: 5 days).</li>
-        <li><strong>Markov Chain Transition:</strong> P(Hot tomorrow | Hot today) = <strong>38.6%</strong> versus P(Hot tomorrow | Cool today) = <strong>0.6%</strong>.</li>
+        <li><strong>Markov Chain Transition:</strong> P(Hot tomorrow | Hot today) = <strong>38.9%</strong> versus P(Hot tomorrow | Cool today) = <strong>0.6%</strong>.</li>
       </ul>
     </section>
 
@@ -468,8 +468,8 @@
         
             <div class="forecast-card today hot">
                 <div class="forecast-phase today">TODAY · ELAPSED</div>
-                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">Today (2026-10-10)</div>
-                <div class="forecast-temp">37.8°C</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">Today (2026-10-11)</div>
+                <div class="forecast-temp">37.2°C</div>
                 <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">State S₀: Extreme Peak</div>
                 <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
                 <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">Same-day diagnostic (retrieved post-peak; excluded from skill score)</div>
@@ -477,8 +477,8 @@
             
             <div class="forecast-card hot">
                 <div class="forecast-phase future">FUTURE (+1d)</div>
-                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-11</div>
-                <div class="forecast-temp">37.4°C</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-12</div>
+                <div class="forecast-temp">37.3°C</div>
                 <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 38.6%</div>
                 <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
                 <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
@@ -486,8 +486,8 @@
             
             <div class="forecast-card hot">
                 <div class="forecast-phase future">FUTURE (+2d)</div>
-                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-12</div>
-                <div class="forecast-temp">37.5°C</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-13</div>
+                <div class="forecast-temp">37.3°C</div>
                 <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 15.3%</div>
                 <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
                 <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
@@ -495,8 +495,8 @@
             
             <div class="forecast-card hot">
                 <div class="forecast-phase future">FUTURE (+3d)</div>
-                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-13</div>
-                <div class="forecast-temp">37.0°C</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-14</div>
+                <div class="forecast-temp">37.3°C</div>
                 <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 6.4%</div>
                 <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
                 <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
@@ -504,26 +504,26 @@
             
             <div class="forecast-card hot">
                 <div class="forecast-phase future">FUTURE (+4d)</div>
-                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-14</div>
-                <div class="forecast-temp">37.1°C</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-15</div>
+                <div class="forecast-temp">36.5°C</div>
                 <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 3.0%</div>
                 <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
                 <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
             </div>
             
-            <div class="forecast-card hot">
+            <div class="forecast-card">
                 <div class="forecast-phase future">FUTURE (+5d)</div>
-                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-15</div>
-                <div class="forecast-temp">36.6°C</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-16</div>
+                <div class="forecast-temp">35.9°C</div>
                 <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 1.7%</div>
-                <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
+                <div class="forecast-flag">Normal Range</div>
                 <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
             </div>
             
             <div class="forecast-card hot">
                 <div class="forecast-phase future">FUTURE (+6d)</div>
-                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-16</div>
-                <div class="forecast-temp">36.8°C</div>
+                <div class="forecast-date" style="font-weight:600; margin-top:0.25rem;">2026-10-17</div>
+                <div class="forecast-temp">36.3°C</div>
                 <div class="forecast-prob" style="font-size:0.68rem; color:var(--danger); font-weight:600;">Markov scenario: 1.2%</div>
                 <div class="forecast-flag">⚠️ Exceeds 36.0°C</div>
                 <div class="forecast-val" style="font-size:0.62rem; color:var(--muted); margin-top:0.25rem; border-top:1px dotted var(--border); padding-top:0.2rem;">⏳ Pending future observation</div>
@@ -531,7 +531,7 @@
             
       </div>
       <p style="font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem;">
-        Data retrieved: 2026-10-10 18:13:47 IST (2026-10-10T12:43:47.322376+00:00) · Source: Open-Meteo NWP model ensemble for Mumbai (19.0861°N, 72.8529°E, Elevation 6.0m). (Client query timestamp; upstream numerical model run cycle initialized independently by Open-Meteo).
+        Data retrieved: 2026-10-11 12:37:26 IST (2026-10-11T07:07:26.665302+00:00) · Source: Open-Meteo NWP model ensemble for Mumbai (19.0861°N, 72.8529°E, Elevation 6.0m). (Client query timestamp; upstream numerical model run cycle initialized independently by Open-Meteo).
       </p>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
@@ -571,9 +571,9 @@
         HeatSense transparently presents this metric as an <strong>Exploratory Decision-Support Indicator</strong> (0–100 scale), disaggregated into its constituent factors:
       </p>
       <ul>
-        <li>Empirical Ground Truth Baseline: 0.95% (265 of 28,042 days strictly &gt; 36.0°C)</li>
+        <li>Empirical Ground Truth Baseline: 0.95% (266 of 28,043 days strictly &gt; 36.0°C)</li>
         <li>Temporal Clustering Adjustment: ×1.019</li>
-        <li>Secular Drift Adjustment: ×1.091</li>
+        <li>Secular Drift Adjustment: ×1.092</li>
       </ul>
     </section>
 
@@ -587,7 +587,7 @@
     </section>
 
     <footer style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 1.5rem; font-size: 0.85rem; color: var(--muted); text-align: center;">
-      HeatSense — Variability and Extreme Temperature Analysis · Automated College Statistics Project Export for Mumbai, Maharashtra, India · Generated 2026-10-10
+      HeatSense — Variability and Extreme Temperature Analysis · Automated College Statistics Project Export for Mumbai, Maharashtra, India · Generated 2026-10-11
     </footer>
   </div>
 </body>
