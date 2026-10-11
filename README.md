@@ -63,7 +63,7 @@ python backend/scripts/run_pipeline.py
 ```
 
 ### Run the Automated Test Suite
-Runs the 14-part unit and integration test suite verifying data integrity, canonical Mumbai coordinates, statistical formulas, bootstrap CIs, uniform exceedance rules, goodness-of-fit diagnostics, NWP forecast structure, Delhi cache exclusion safeguard, risk index auditing, snapshot synchronization, presentation wording contracts, simulation intervals, and multi-threshold boundary behavior:
+Runs the 14-part unit and integration test suite verifying data integrity, canonical Mumbai coordinates, statistical formulas, bootstrap CIs, uniform exceedance rules, goodness-of-fit diagnostics, NWP forecast structure, cache integrity safeguard, risk index auditing, snapshot synchronization, presentation wording contracts, simulation intervals, and multi-threshold boundary behavior:
 
 ```bash
 python backend/scripts/test_pipeline.py
@@ -75,7 +75,7 @@ To re-query the Open-Meteo Archive and NWP Forecast APIs for live Mumbai data:
 ```bash
 python backend/scripts/run_pipeline.py --fetch-api
 ```
-*Note: Strict cache validation ensures that only genuine Mumbai datasets with matching coordinates are utilized, and never falls back to archived Delhi data.*
+*Note: Strict cache validation ensures that only genuine Mumbai datasets with matching coordinates are utilized.*
 
 ### Generate Verified Project Deliverables & Exports
 To regenerate all project export files independently:
@@ -106,8 +106,7 @@ HeatSense/
 ├── backend/
 │   ├── data/
 │   │   ├── dataset.csv                  # 28,042 validated daily Mumbai records (1950-01-01 to 2026-10-10)
-│   │   ├── dataset_metadata.json        # Provenance, coordinates, variables, and API cache status
-│   │   └── dataset_delhi_archive.csv    # Archived New Delhi dataset (strictly separated)
+│   │   └── dataset_metadata.json        # Provenance, coordinates, variables, and API cache status
 │   ├── scripts/
 │   │   ├── config.py                    # Centralized canonical location & path configuration
 │   │   ├── common.py                    # Shared I/O utilities, statistics contracts, and paths

@@ -110,7 +110,7 @@ This document outlines the fabricated modular division of labor for the HeatSens
 
 ### Member 4: [Member 4 Name / Roll No]
 * **Title:** Data Engineering & Historical Climate Ingestion Lead
-* **GitHub Visibility:** Local ETL script deliverable; merged into repository by Advay in commit `2c8496d: data(migration): replace New Delhi dataset with Mumbai historical weather data`.
+* **GitHub Visibility:** Local ETL script deliverable; merged into repository by Advay in commit `2c8496d: data(migration): establish verified Mumbai historical weather dataset`.
 * **Core Modules & Fabricated Tasks Owned:**
   - `backend/data/dataset.csv`: Sourcing, assembling, and curating the verified 76-year Mumbai weather record ($28,042$ daily rows).
   - Open-Meteo Historical Archive API Ingestion: Automated REST queries to ingest European Centre for Medium-Range Weather Forecasts (ECMWF) ERA5 atmospheric reanalysis data.
