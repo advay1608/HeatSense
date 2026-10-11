@@ -155,6 +155,6 @@ HeatSense/
 - **Secular Trend (Complete Years 1950–2025, $N=76$):** $+0.1128^\circ\text{C}/\text{decade}$ ($95\%\text{ CI: } [+0.0725, +0.1532]^\circ\text{C}/\text{decade}$, $p < 0.0001$, $R^2 = 0.289$). Daily continuous series drift: $+0.1192^\circ\text{C}/\text{decade}$ (total drift $+0.92^\circ\text{C}$, $R^2 = 0.0122$).
 - **Heatwave Persistence:** $\rho_1 = 0.9039$, weekly persistence $\rho_7 = 0.6484$, 163 distinct heatwave clusters, mean run length above $36^\circ\text{C} = 1.63$ days (max run $= 5$ days), Markov transition $P(\text{Hot}\mid\text{Hot}) = 38.6\%$ vs $P(\text{Hot}\mid\text{Cool}) = 0.6\%$.
 - **Exploratory Heat Risk Index:** $\mathbf{1.05 / 100}$ (Low Band; uncalibrated operational decision indicator).
-- **Forecast Validation & Verification Discipline:** Strict out-of-sample discipline ($0$ validated pairs claimed prior to date conclusion, same-day post-peak retrieval excluded from skill score, ERA5 reanalysis proxy limitations disclosed, uncalibrated confidence intervals removed).
+- **Forecast Validation & Verification Discipline:** Strict out-of-sample discipline ($0$ validated pairs claimed prior to date conclusion, current-day diagnostic excluded from out-of-sample validation, ERA5 reanalysis proxy limitations disclosed, uncalibrated confidence intervals removed).
 - **Verification Status:** 16 automated unit, regression, and integration tests passing (`python backend/scripts/test_pipeline.py`).
 

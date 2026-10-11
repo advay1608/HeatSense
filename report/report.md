@@ -206,13 +206,13 @@ All returned values are authentic raw API responses without artificial smoothing
 
 | Day Index | Target Date | Horizon / Lead | Forecast Max ($^\circ\text{C}$) | Exceeds $36.0^\circ\text{C}$? | Markov Persistence Scenario (Exploratory) | Verification Status (Out-of-Sample Discipline) |
 |---|---|---|---|---|---|---|
-| **Day 1** | **2026-10-10** | **Today (Elapsed Peak)** | **37.6** | Yes ($+1.6^\circ\text{C}$) | *Conditioning State $S_0$* (Observed active heat spike) | **Diagnostic Only:** Same-day comparison vs. ERA5 ($37.6^\circ\text{C}$); excluded from forecast skill score (retrieved post-peak) |
-| **Day 2** | **2026-10-11** | Future (Lead +1d) | **37.6** | Yes ($+1.6^\circ\text{C}$) | **38.64%** ($40.9\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 11 Oct observation cycle |
-| **Day 3** | **2026-10-12** | Future (Lead +2d) | **37.1** | Yes ($+1.1^\circ\text{C}$) | **15.28%** ($16.2\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 12 Oct observation cycle |
-| **Day 4** | **2026-10-13** | Future (Lead +3d) | **37.3** | Yes ($+1.3^\circ\text{C}$) | **6.40%** ($6.8\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 13 Oct observation cycle |
-| **Day 5** | **2026-10-14** | Future (Lead +4d) | **37.3** | Yes ($+1.3^\circ\text{C}$) | **3.02%** ($3.2\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 14 Oct observation cycle |
-| **Day 6** | **2026-10-15** | Future (Lead +5d) | **37.6** | Yes ($+1.6^\circ\text{C}$) | **1.74%** ($1.8\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 15 Oct observation cycle |
-| **Day 7** | **2026-10-16** | Future (Lead +6d) | **36.8** | Yes ($+0.8^\circ\text{C}$) | **1.25%** ($1.3\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 16 Oct observation cycle |
+| **Day 1** | **2026-10-11** | **Today (Active Cycle)** | **37.2** | Yes ($+1.2^\circ\text{C}$) | *Conditioning State $S_0$* (Observed active heat spike) | **Current-Day Diagnostic — Excluded from Out-of-Sample Validation:** Same-day comparison vs. ERA5 ($37.2^\circ\text{C}$); retrieval at 13:13 IST occurs during diurnal heating prior to local day conclusion |
+| **Day 2** | **2026-10-12** | Future (Lead +1d) | **37.3** | Yes ($+1.3^\circ\text{C}$) | **38.64%** ($40.9\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 12 Oct observation cycle |
+| **Day 3** | **2026-10-13** | Future (Lead +2d) | **37.3** | Yes ($+1.3^\circ\text{C}$) | **15.28%** ($16.2\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 13 Oct observation cycle |
+| **Day 4** | **2026-10-14** | Future (Lead +3d) | **37.3** | Yes ($+1.3^\circ\text{C}$) | **6.40%** ($6.8\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 14 Oct observation cycle |
+| **Day 5** | **2026-10-15** | Future (Lead +4d) | **36.5** | Yes ($+0.5^\circ\text{C}$) | **3.02%** ($3.2\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 15 Oct observation cycle |
+| **Day 6** | **2026-10-16** | Future (Lead +5d) | **35.9** | No ($-0.1^\circ\text{C}$) | **1.74%** ($1.8\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 16 Oct observation cycle |
+| **Day 7** | **2026-10-17** | Future (Lead +6d) | **36.3** | Yes ($+0.3^\circ\text{C}$) | **1.25%** ($1.3\times$ annual base; seasonal caveat) | *Pending Validation:* Awaiting 17 Oct observation cycle |
 
 *Notice on Forecast Intervals & Markov Scenarios:*
 1. **No Calibrated Prediction Interval:** Historical temperature variability alone ($\pm 3.5^\circ\text{C}$) does not establish a calibrated NWP forecast confidence interval. Raw NWP predictions are presented without uncalibrated uncertainty intervals until a sufficiently large sample of pre-target forecast snapshots can be evaluated against finalized ground truths.
@@ -227,8 +227,8 @@ The predicted range ($36.8^\circ\text{C}$ to $37.6^\circ\text{C}$) represents th
 
 ### 12.4 Strict Scientific Validation Ledger & Verification Source Disclosure
 - **Out-of-Sample Pairs Evaluated:** **0 dates**.
-- **Same-Day Diagnostic Comparison (Excluded):** $1$ date ($2026-10-10$: Forecast $37.6^\circ\text{C}$ vs. ERA5 Grid Proxy $37.6^\circ\text{C}$). Because API retrieval occurred at 16:51 IST (after the diurnal peak), matching the daily maximum is a same-day diagnostic consistency check, not genuine out-of-sample forecast validation. It is excluded from skill scoring.
-- **Pending Future Forecast Dates:** **6 dates** ($2026-10-11$ through $2026-10-16$). Snapshot logged prior to target dates; awaiting conclusion of observation cycles.
+- **Current-Day Diagnostic Comparison (Excluded):** $1$ date ($2026-10-11$: Forecast $37.2^\circ\text{C}$ vs. ERA5 Grid Proxy $37.2^\circ\text{C}$). Because API retrieval occurred at 13:13 IST (during active diurnal heating prior to local day conclusion), matching the daily maximum is a current-day diagnostic consistency check, not genuine out-of-sample forecast validation. It is excluded from skill scoring.
+- **Pending Future Forecast Dates:** **6 dates** ($2026-10-12$ through $2026-10-17$). Snapshot logged prior to target dates; awaiting conclusion of observation cycles.
 - **Forecast Skill Metrics:** **MAE = N/A · Bias = N/A** (no out-of-sample pairs have elapsed).
 - **Verification Target Nature:** Open-Meteo Historical Archive returns **ECMWF ERA5 reanalysis estimates** at a grid point ($19.0861^\circ\text{N}, 72.8529^\circ\text{E}$), not an independent physical ground station thermometer. Because ERA5 reanalysis and NWP models share atmospheric parameterization physics, verification errors evaluate forecast-versus-reanalysis proxy consistency, not independently verified station accuracy. Physical station data from IMD Santacruz/Colaba represent point thermometer shelters with local microclimatic boundary effects.
-- **Integrity Rule:** HeatSense **never** claims forecast accuracy before dates have elapsed, nor scores same-day post-peak retrievals as out-of-sample predictive skill.
+- **Integrity Rule:** HeatSense **never** claims forecast accuracy before dates have elapsed, nor scores current-day diagnostics as out-of-sample predictive skill before the local day has ended and finalized observations are available.
