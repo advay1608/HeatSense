@@ -16,7 +16,7 @@ Coverage:                1950-01-01 to latest date available from API
 
 Guarantees:
 - Robust error handling, retries, and explicit caching detection.
-- Strictly separates Mumbai cache from any Delhi files; NEVER falls back to Delhi data.
+- Strictly validates Mumbai dataset coordinates (~19.08°N); never falls back to unverified cache data.
 - Missing values and duplicate dates explicitly detected, counted, and recorded.
 - Never silently fabricates data when the API fails.
 - Never generates weather forecasts from statistical distributions or persistence;
@@ -411,8 +411,8 @@ def save_forecast_history_ledger(days: list, retrieval_time_iso: str) -> None:
 
 def is_valid_mumbai_cache(data_path: str, meta_path: str) -> bool:
     """
-    Verifies that a cached dataset actually belongs to Mumbai, not Delhi.
-    Prevents any accidental fallback to old Delhi data.
+    Verifies that a cached dataset strictly belongs to canonical Mumbai coordinates and metadata.
+    Prevents any accidental fallback to invalid or unverified external data.
     """
     if not os.path.exists(data_path) or os.path.getsize(data_path) < 1000:
         return False
@@ -424,7 +424,7 @@ def is_valid_mumbai_cache(data_path: str, meta_path: str) -> bool:
             meta = json.load(f)
         loc = meta.get("location_name", "").lower()
         lat = meta.get("latitude", 0.0)
-        # Check that it explicitly identifies Mumbai and latitude is near 19.08 (not Delhi's 28.61)
+        # Check that it explicitly identifies Mumbai and latitude is near canonical Mumbai coordinates (~19.08)
         if "mumbai" in loc and abs(lat - REQUESTED_LATITUDE) < 1.0:
             return True
     except Exception:
@@ -443,7 +443,7 @@ def ingest_data(
     """
     Fetches real Mumbai historical weather data from Open-Meteo, cleans, validates,
     records detailed metadata, and handles caching transparently.
-    Guarantees no Delhi data is ever reused.
+    Guarantees strict Mumbai spatial integrity.
     """
     is_cached = False
     cache_reason = None
@@ -474,7 +474,7 @@ def ingest_data(
         else:
             raise RuntimeError(
                 f"Failed to fetch Mumbai data from Open-Meteo API ({e}) and no valid Mumbai cache is available. "
-                "Silently substituting Delhi data or fabricated values is strictly prohibited."
+                "Silently substituting external data or fabricated values is strictly prohibited."
             )
 
     if not is_cached:
