@@ -90,8 +90,10 @@ def fetch_open_meteo_archive(
     Queries Open-Meteo Historical Archive API for daily maximum temperatures in Mumbai.
     Dynamically resolves the latest available date if end_date is None or out of range.
     """
-    base_url = "https://archive-api.open-meteo.com/v1/archive"
-    target_end_date = end_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # Historical archive only finalizes for completed calendar days prior to today;
+    # the active current day is tracked by the NWP forecast API.
+    yesterday_str = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+    target_end_date = end_date or yesterday_str
 
     def make_url(e_date: str) -> str:
         params = {
@@ -200,9 +202,9 @@ def fetch_open_meteo_forecast(
             lead_days = idx - 1  # 0 for today, 1..6 for future days
 
             if is_today:
-                phase_label = "today_elapsed_peak"
+                phase_label = "today_current_cycle"
                 display_label = f"Today ({d_str})"
-                temporal_desc = "Same-day observation / elapsed daylight maximum (retrieved after afternoon peak). Excluded from out-of-sample forecast validation."
+                temporal_desc = "Current-day observation cycle (retrieved during diurnal heating window before local day conclusion). Excluded from out-of-sample forecast validation."
                 # Day 1 is conditioning state S_0, not an unobserved future transition probability
                 markov_scenario_data = {
                     "is_conditioning_state": True,
@@ -210,7 +212,7 @@ def fetch_open_meteo_forecast(
                     "conditional_exceedance_probability": None,
                     "disclaimer": "Observed state S_0, not a forward transition probability.",
                 }
-                # Same-day diagnostic comparison: excluded from out-of-sample forecast validation
+                # Current-day diagnostic comparison: excluded from out-of-sample forecast validation
                 val_status = "same_day_diagnostic_excluded"
                 is_val = False
                 obs_t = observed_lookup.get(d_str, t_float)
@@ -218,7 +220,7 @@ def fetch_open_meteo_forecast(
                 abs_diff = round(abs(diff_val), 2) if diff_val is not None else None
                 val_note = (
                     f"Same-day diagnostic comparison against ERA5 grid proxy ({obs_t}°C). "
-                    "Excluded from out-of-sample forecast validation ledger because API retrieval occurred after the diurnal heating peak."
+                    "Current-Day Diagnostic — Excluded from Out-of-Sample Validation because retrieval occurred before the local day has ended and finalized observations are available."
                 )
             else:
                 k = lead_days
@@ -272,6 +274,21 @@ def fetch_open_meteo_forecast(
         mae_val = round(float(np.mean([d["validation"]["difference_c"] for d in out_of_sample_val_pairs])), 2) if out_of_sample_val_pairs else None
         bias_val = round(float(np.mean([d["validation"]["difference_c"] for d in out_of_sample_val_pairs])), 2) if out_of_sample_val_pairs else None
 
+        if pending_pairs:
+            try:
+                p_start = datetime.strptime(pending_pairs[0]["date"], "%Y-%m-%d").strftime("%b %d")
+                p_end = datetime.strptime(pending_pairs[-1]["date"], "%Y-%m-%d").strftime("%b %d")
+                p_range_str = f"{p_start}–{p_end}"
+            except Exception:
+                p_range_str = "future dates"
+        else:
+            p_range_str = "future dates"
+
+        same_day_desc = f"{len(same_day_excluded)} current-day diagnostic"
+        if same_day_excluded:
+            same_day_desc += f" ({same_day_excluded[0]['date']})"
+        same_day_desc += " excluded from out-of-sample validation."
+
         validation_summary = {
             "total_target_days": len(days),
             "n_validated_pairs": len(out_of_sample_val_pairs),
@@ -284,8 +301,8 @@ def fetch_open_meteo_forecast(
             "mae_c": mae_val,
             "bias_c": bias_val,
             "verification_target_nature": "ECMWF ERA5 Reanalysis Grid Proxy (Area-averaged cell). Notice: Reanalysis estimates share numerical parameterization errors with NWP models and do not constitute independent physical station verification.",
-            "validation_rule": "Strict out-of-sample discipline: Only forecasts fetched prior to the target date's heating window can be validated once subsequent observations finalize. Same-day post-peak retrievals and unobserved future dates are strictly excluded from MAE and bias metrics.",
-            "status_statement": f"0 out-of-sample forecast dates validated. 1 same-day post-peak retrieval excluded from skill scoring. {len(pending_pairs)} future forecast dates (Oct 11–16) await observation and cannot yet be validated.",
+            "validation_rule": "Strict out-of-sample discipline: Only forecasts fetched prior to the target date's observation cycle can be validated once subsequent observations finalize. Current-day retrievals before local day conclusion and unobserved future dates are strictly excluded from MAE and bias metrics.",
+            "status_statement": f"{len(out_of_sample_val_pairs)} out-of-sample forecast dates validated. {same_day_desc} {len(pending_pairs)} future forecast dates ({p_range_str}) await observation and cannot yet be validated.",
         }
 
         # Persistent history ledger

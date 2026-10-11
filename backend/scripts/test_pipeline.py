@@ -254,10 +254,10 @@ class TestHeatSensePipeline(unittest.TestCase):
         self.assertIn("timing_disclosure", fc)
         self.assertIn("client data retrieval time", fc["timing_disclosure"])
 
-        # First day must be flagged as today (elapsed diurnal heating peak)
+        # First day must be flagged as today (current-day diagnostic cycle)
         first_day = fc["days"][0]
         self.assertTrue(first_day.get("is_today", False))
-        self.assertEqual(first_day.get("phase"), "today_elapsed_peak")
+        self.assertEqual(first_day.get("phase"), "today_current_cycle")
 
         # Days 2-7 must be flagged as genuinely future projections
         for d in fc["days"][1:]:
@@ -473,8 +473,8 @@ class TestHeatSensePipeline(unittest.TestCase):
     def test_16_forecast_scientific_validation_audit(self):
         """
         Audits forecast validation ledger, verification source transparency, and statistical discipline:
-        - Same-day post-peak retrieval (10 Oct) is strictly excluded from out-of-sample validation.
-        - Pending future dates (11–16 Oct) cannot be scored prematurely.
+        - Current-day diagnostic retrieval (11 Oct) is strictly excluded from out-of-sample validation.
+        - Pending future dates (12–17 Oct) cannot be scored prematurely.
         - Uncalibrated Markov results and confidence intervals are not presented as validated forecasts.
         - Verification target nature explicitly discloses ECMWF ERA5 reanalysis proxy limitations.
         """
@@ -482,16 +482,16 @@ class TestHeatSensePipeline(unittest.TestCase):
         days = fc["days"]
         self.assertEqual(len(days), 7)
 
-        # 1. Day 1 Audit: Same-Day Post-Peak Retrieval
+        # 1. Day 1 Audit: Current-Day Diagnostic Retrieval
         day1 = days[0]
         retrieval_date = fc.get("retrieval_timestamp_ist", "")[:10] if fc.get("retrieval_timestamp_ist") else day1["date"]
         self.assertEqual(day1["date"], retrieval_date)
         self.assertTrue(day1["is_today"])
-        self.assertEqual(day1["phase"], "today_elapsed_peak")
+        self.assertEqual(day1["phase"], "today_current_cycle")
         # Strict exclusion from out-of-sample validation ledger
-        self.assertFalse(day1["validation"]["is_validated"], "Same-day post-peak retrieval must NOT be counted as validated forecast")
+        self.assertFalse(day1["validation"]["is_validated"], "Current-day diagnostic must NOT be counted as validated forecast")
         self.assertEqual(day1["validation"]["status"], "same_day_diagnostic_excluded")
-        self.assertIn("Excluded from out-of-sample forecast validation", day1["validation"]["note"])
+        self.assertIn("Excluded from Out-of-Sample Validation", day1["validation"]["note"])
         # Markov scenario for Day 1: must be conditioning state S_0, NOT 100% forward transition probability
         self.assertIn("historical_markov_scenario", day1)
         self.assertTrue(day1["historical_markov_scenario"]["is_conditioning_state"])
