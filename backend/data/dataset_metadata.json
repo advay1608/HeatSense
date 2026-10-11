@@ -13,19 +13,19 @@
   "units": "degrees Celsius",
   "requested_period": {
     "start_date": "1950-01-01",
-    "requested_end_date": "2026-10-11"
+    "requested_end_date": "2026-10-10"
   },
   "actual_data_coverage": {
     "start_date": "1950-01-01",
-    "end_date": "2026-10-11",
-    "total_days_requested": 28043,
-    "valid_observations": 28043,
+    "end_date": "2026-10-10",
+    "total_days_requested": 28042,
+    "valid_observations": 28042,
     "missing_observations": 0,
     "duplicate_dates_removed": 0
   },
   "start_date": "1950-01-01",
-  "end_date": "2026-10-11",
-  "total_observations": 28043,
+  "end_date": "2026-10-10",
+  "total_observations": 28042,
   "temperature_stats": {
     "min_c": 22.1,
     "max_c": 41.3,
@@ -36,9 +36,9 @@
   "source": "Open-Meteo Historical Weather Archive API",
   "underlying_model": "ECMWF ERA5 Reanalysis (~0.25 deg grid resolution)",
   "grid_point_disclosure": "Data represents ECMWF ERA5 reanalysis grid point (19.0861\u00b0N, 72.8529\u00b0E, elevation 6.0m), not a single physical weather station sensor.",
-  "citation": "Open-Meteo.com Historical Weather Archive API (ERA5 Reanalysis by ECMWF). Data retrieved for Mumbai, Maharashtra, India (Requested: 19.076\u00b0 N, 72.8777\u00b0 E; ERA5 Grid Point: 19.086115\u00b0 N, 72.85291\u00b0 E) spanning 1950-01-01 to 2026-10-11.",
+  "citation": "Open-Meteo.com Historical Weather Archive API (ERA5 Reanalysis by ECMWF). Data retrieved for Mumbai, Maharashtra, India (Requested: 19.076\u00b0 N, 72.8777\u00b0 E; ERA5 Grid Point: 19.086115\u00b0 N, 72.85291\u00b0 E) spanning 1950-01-01 to 2026-10-10.",
   "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
-  "retrieval_timestamp": "2026-10-11T07:07:25.849638+00:00",
+  "retrieval_timestamp": "2026-10-10T11:21:17.199632+00:00",
   "is_cached": false,
   "cache_reason": null,
   "limitations": [
