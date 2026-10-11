@@ -54,7 +54,6 @@ DATA_PATH = os.path.join(DATA_DIR, "dataset.csv")
 DATASET_METADATA_PATH = os.path.join(DATA_DIR, "dataset_metadata.json")
 META_PATH = DATASET_METADATA_PATH
 MUMBAI_CACHE_PATH = os.path.join(DATA_DIR, "dataset_mumbai.csv")
-DELHI_ARCHIVE_PATH = os.path.join(DATA_DIR, "dataset_delhi_archive.csv")
 
 # Results Paths
 RESULTS_PATH = os.path.join(OUTPUT_DIR, "results.json")

@@ -170,9 +170,10 @@ def main():
         "threshold_c": threshold_c,
         "exceedance_rule": "temperature > threshold_c",
         "monte_carlo": {
+            "model_sampled": best_model_name,
             "trials": MONTE_CARLO_TRIALS,
             "probabilities": mc_probs,
-            "note": "Parametric random draws from fitted distribution. Validates numerical convergence of theoretical SF, not independent empirical model correctness.",
+            "note": f"Parametric random draws from fitted {best_model_name} distribution at canonical threshold {threshold_c:.1f}°C. Validates numerical convergence of theoretical SF, not independent empirical model correctness.",
         },
         "bootstrap_probability": bootstrap_prob,
         "bootstrap_ci95": boot_ci95,

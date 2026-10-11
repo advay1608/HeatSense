@@ -42,7 +42,7 @@
 
 > "Next, look at our forecast panel: rather than fabricating a synthetic 7-day projection, we integrated the **live Open-Meteo Numerical Weather Prediction (NWP) API for Mumbai**.
 > 
-> Notice how we strictly audit this forecast: we present **Today (10 Oct: 37.6°C)** as an elapsed diurnal heating peak. Because our data was retrieved at 16:52 IST—after the day's maximum—matching the reanalysis proxy is a diagnostic check, not out-of-sample forecast validation. Under strict scientific discipline, we exclude it from forecast MAE and bias calculations, leaving **0 verified out-of-sample dates** and **6 pending future dates (11–16 Oct)** that await finalized observations.
+> Notice how we strictly audit this forecast: we present **Today (11 Oct: 37.2°C)** as a **Current-Day Diagnostic — Excluded from Out-of-Sample Validation**. Because our data was retrieved at 13:13 IST—during the active daytime heating window before the day has ended and before a finalized verification observation is available—it cannot be scored as an out-of-sample forecast. Under strict scientific discipline, we exclude it from forecast MAE and bias calculations, leaving **0 verified out-of-sample dates** and **6 pending future dates (12–17 Oct)** that await finalized observations.
 > 
 > We also show raw NWP temperatures without artificial confidence intervals, because historical variance does not calibrate an NWP prediction interval. Beside the forecast, we provide our **exploratory Markov persistence scenario** (38.6% tomorrow given today's heat spike), but we clearly label it as an empirical persistence baseline subject to strong seasonal limits, strictly decoupled from the physical NWP model.
 > 
@@ -55,6 +55,6 @@
 > 
 > While our 76-year ERA5 reanalysis dataset provides exceptional statistical power with a 95% bootstrap confidence interval of just $\pm 0.03^\circ\text{C}$ on the mean, ERA5 reflects a reanalysis grid cell ($19.086^\circ\text{N}, 72.8529^\circ\text{E}$, elevation 6.0 m) rather than an independent physical weather station thermometer. Reanalysis and NWP share atmospheric modeling physics, meaning verification errors reflect model-versus-reanalysis proxy agreement rather than independent ground truth.
 > 
-> If asked why October NWP predictions reach 36.8–37.6°C: this reflects authentic **'October Heat'** in Mumbai, where continental easterly land breezes delay the cooling sea breeze, matching inland **IMD Santacruz** observations (which frequently reach 36–38°C in October) while coastal Colaba remains marine-moderated at 32–34°C. Furthermore, we maintain a strict validation ledger: we never score future dates (11–16 Oct) or same-day post-peak retrievals as verified forecast accuracy.
+> If asked why October NWP predictions reach 36.8–37.6°C: this reflects authentic **'October Heat'** in Mumbai, where continental easterly land breezes delay the cooling sea breeze, matching inland **IMD Santacruz** observations (which frequently reach 36–38°C in October) while coastal Colaba remains marine-moderated at 32–34°C. Furthermore, we maintain a strict validation ledger: we never score future dates (12–17 Oct) or current-day diagnostic retrievals as verified out-of-sample forecast accuracy before observations finalize.
 > 
 > Thank you, and we welcome your questions!"

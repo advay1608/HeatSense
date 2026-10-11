@@ -279,16 +279,19 @@ def generate_html_report(results: dict) -> str:
 
     seasonal_html = ""
     for s in cs.get("seasonal_summary", []):
+        n_d = s.get('n_days', 0)
+        cnt = s.get('exceedance_count', 0)
+        rate_pct = (cnt / n_d * 100) if n_d > 0 else 0.0
         seasonal_html += f"""
         <tr>
             <td><strong>{s.get('season_name')}</strong></td>
             <td>{', '.join(str(m) for m in s.get('months', []))}</td>
-            <td>{s.get('n_days', 0):,}</td>
+            <td>{n_d:,}</td>
             <td>{s.get('mean_c', 0):.2f}°C</td>
             <td>{s.get('min_c', 0):.1f}°C</td>
             <td>{s.get('max_c', 0):.1f}°C</td>
-            <td>{s.get('exceedance_count', 0):,}</td>
-            <td><strong>{s.get('exceedance_rate', 0)*100:.2f}%</strong></td>
+            <td>{cnt:,}</td>
+            <td><strong>{rate_pct:.2f}%</strong></td>
         </tr>
         """
 
@@ -303,11 +306,11 @@ def generate_html_report(results: dict) -> str:
             lead = d.get("lead_days", 0)
 
             if is_today:
-                phase_badge = '<div class="forecast-phase today">TODAY · ELAPSED</div>'
+                phase_badge = '<div class="forecast-phase today">TODAY · ACTIVE DAY</div>'
                 date_label = f"Today ({d_date})"
                 card_class = "forecast-card today hot" if is_hot else "forecast-card today"
                 stat_prob_text = "State S₀: Extreme Peak"
-                val_text = "Same-day diagnostic (retrieved post-peak; excluded from skill score)"
+                val_text = "Current-Day Diagnostic — Excluded from Out-of-Sample Validation"
             else:
                 phase_badge = f'<div class="forecast-phase future">FUTURE (+{lead}d)</div>'
                 date_label = f"{d_date}"
@@ -711,7 +714,7 @@ def generate_html_report(results: dict) -> str:
         {forecast_html}
       </div>
       <p style="font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem;">
-        Data retrieved: {fc.get('retrieval_timestamp_ist', '16:51:17 IST')} ({fc.get('retrieval_timestamp_utc', 'UTC')}) · Source: Open-Meteo NWP model ensemble for Mumbai ({lat_val:.4f}°N, {lon_val:.4f}°E, Elevation 6.0m). (Client query timestamp; upstream numerical model run cycle initialized independently by Open-Meteo).
+        Data Retrieval Time: {fc.get('retrieval_timestamp_ist', '13:13:11 IST')} ({fc.get('retrieval_timestamp_utc', 'UTC')}) · Source: Open-Meteo NWP model ensemble for Mumbai ({lat_val:.4f}°N, {lon_val:.4f}°E, Elevation 6.0m). (Client data retrieval query timestamp; upstream numerical model run cycle initialized independently by Open-Meteo).
       </p>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
@@ -726,9 +729,9 @@ def generate_html_report(results: dict) -> str:
         <div style="background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1rem; font-size:0.85rem;">
           <h3 style="margin:0 0 0.5rem 0; font-size:0.95rem;">Strict Forecast Validation Ledger</h3>
           <div style="color:var(--muted); line-height:1.6;">
-            <div>Verified Out-of-Sample Pairs: <strong style="color:var(--ink);">0 dates (Awaiting completed out-of-sample cycles)</strong></div>
-            <div>Same-Day Diagnostic (Post-Peak): <strong style="color:var(--muted);">1 date (10 Oct 2026, excluded from skill score)</strong></div>
-            <div>Pending Future Forecast Dates: <strong style="color:var(--accent);">{fc.get('validation_summary', {}).get('n_pending_future_days', 6)} dates (11–16 Oct 2026)</strong></div>
+            <div>Verified Out-of-Sample Pairs: <strong style="color:var(--ink);">{fc.get('validation_summary', {}).get('n_out_of_sample_validated', 0)} dates (Awaiting completed out-of-sample cycles)</strong></div>
+            <div>Current-Day Diagnostic — Excluded from Out-of-Sample Validation: <strong style="color:var(--muted);">{len(fc.get('validation_summary', {}).get('same_day_diagnostic_dates', ['2026-10-11']))} date ({', '.join(fc.get('validation_summary', {}).get('same_day_diagnostic_dates', ['2026-10-11']))})</strong></div>
+            <div>Pending Future Forecast Dates: <strong style="color:var(--accent);">{fc.get('validation_summary', {}).get('n_pending_future_days', 6)} dates ({fc.get('validation_summary', {}).get('pending_dates', ['2026-10-12'])[0]} to {fc.get('validation_summary', {}).get('pending_dates', ['2026-10-17'])[-1]})</strong></div>
             <div>Out-of-Sample MAE / Bias: <strong>N/A (No prior pre-date cycles completed)</strong></div>
             <p style="font-size:0.75rem; margin:0.4rem 0 0 0; border-top:1px dashed var(--border); padding-top:0.3rem;">
               <strong>Verification Target Nature:</strong> Archive verification uses ECMWF ERA5 reanalysis grid estimates (19.0861°N, 72.8529°E), not independent ground station thermometers. Because operational NWP and ERA5 share underlying ECMWF atmospheric physics, forecast-versus-reanalysis comparisons do not constitute independent physical station validation.

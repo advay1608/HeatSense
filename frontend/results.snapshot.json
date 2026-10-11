@@ -375,6 +375,7 @@
     "threshold_c": 36.0,
     "exceedance_rule": "temperature > threshold_c",
     "monte_carlo": {
+      "model_sampled": "lognorm",
       "trials": [
         1000,
         10000,
@@ -385,7 +386,7 @@
         0.0122,
         0.012
       ],
-      "note": "Parametric random draws from fitted distribution. Validates numerical convergence of theoretical SF, not independent empirical model correctness."
+      "note": "Parametric random draws from fitted lognorm distribution at canonical threshold 36.0\u00b0C. Validates numerical convergence of theoretical SF, not independent empirical model correctness."
     },
     "bootstrap_probability": 0.0095,
     "bootstrap_ci95": [
@@ -113638,12 +113639,12 @@
     "timezone": "Asia/Kolkata",
     "timezone_abbreviation": "GMT+5:30",
     "utc_offset_seconds": 19800,
-    "generationtime_ms": 0.036597251892089844,
+    "generationtime_ms": 0.04506111145019531,
     "source": "Open-Meteo Numerical Weather Prediction (NWP) Forecast API",
     "model": "Operational Global Numerical Weather Prediction ensemble",
-    "retrieval_timestamp_utc": "2026-10-10T12:43:47.322376+00:00",
-    "retrieval_timestamp_ist": "2026-10-10 18:13:47 IST",
-    "retrieved_at": "2026-10-10T12:43:47.322376+00:00",
+    "retrieval_timestamp_utc": "2026-10-11T08:25:06.758366+00:00",
+    "retrieval_timestamp_ist": "2026-10-11 13:55:06 IST",
+    "retrieved_at": "2026-10-11T08:25:06.758366+00:00",
     "timing_disclosure": "Timestamp reflects client data retrieval time from API, not NWP model run cycle initialization. Upstream numerical model cycles are maintained independently by Open-Meteo.",
     "variable": "daily_maximum_temperature_2m",
     "units": "\u00b0C",
@@ -113655,15 +113656,15 @@
       {
         "day_index": 1,
         "lead_days": 0,
-        "date": "2026-10-10",
-        "forecast_max_temp_c": 37.8,
+        "date": "2026-10-11",
+        "forecast_max_temp_c": 37.2,
         "is_today": true,
         "is_future": false,
-        "phase": "today_elapsed_peak",
-        "display_label": "Today (2026-10-10)",
-        "temporal_description": "Same-day observation / elapsed daylight maximum (retrieved after afternoon peak). Excluded from out-of-sample forecast validation.",
+        "phase": "today_current_cycle",
+        "display_label": "Today (2026-10-11)",
+        "temporal_description": "Current-day observation cycle (retrieved during diurnal heating window before local day conclusion). Excluded from out-of-sample forecast validation.",
         "exceeds_threshold": true,
-        "threshold_difference_c": 1.8,
+        "threshold_difference_c": 1.2,
         "historical_markov_scenario": {
           "is_conditioning_state": true,
           "state_description": "Active extreme heat state (T > 36.0\u00b0C) conditioning subsequent days",
@@ -113673,25 +113674,25 @@
         "validation": {
           "is_validated": false,
           "status": "same_day_diagnostic_excluded",
-          "observed_proxy_max_temp_c": 37.6,
-          "difference_c": 0.2,
+          "observed_proxy_max_temp_c": 37.2,
+          "difference_c": 0.0,
           "verification_target": "ERA5 Reanalysis Grid Proxy (19.0861\u00b0N, 72.8529\u00b0E)",
-          "note": "Same-day diagnostic comparison against ERA5 grid proxy (37.6\u00b0C). Excluded from out-of-sample forecast validation ledger because API retrieval occurred after the diurnal heating peak."
+          "note": "Same-day diagnostic comparison against ERA5 grid proxy (37.2\u00b0C). Current-Day Diagnostic \u2014 Excluded from Out-of-Sample Validation because retrieval occurred before the local day has ended and finalized observations are available."
         },
         "source": "Open-Meteo Weather Forecast API"
       },
       {
         "day_index": 2,
         "lead_days": 1,
-        "date": "2026-10-11",
-        "forecast_max_temp_c": 37.4,
+        "date": "2026-10-12",
+        "forecast_max_temp_c": 37.3,
         "is_today": false,
         "is_future": true,
         "phase": "future_nwp_projection",
-        "display_label": "Day +1 (2026-10-11)",
+        "display_label": "Day +1 (2026-10-12)",
         "temporal_description": "Operational NWP model projection (1-day forecast lead time). Pending future verification.",
         "exceeds_threshold": true,
-        "threshold_difference_c": 1.4,
+        "threshold_difference_c": 1.3,
         "historical_markov_scenario": {
           "is_conditioning_state": false,
           "conditional_exceedance_probability": 0.3864,
@@ -113711,15 +113712,15 @@
       {
         "day_index": 3,
         "lead_days": 2,
-        "date": "2026-10-12",
-        "forecast_max_temp_c": 37.5,
+        "date": "2026-10-13",
+        "forecast_max_temp_c": 37.3,
         "is_today": false,
         "is_future": true,
         "phase": "future_nwp_projection",
-        "display_label": "Day +2 (2026-10-12)",
+        "display_label": "Day +2 (2026-10-13)",
         "temporal_description": "Operational NWP model projection (2-day forecast lead time). Pending future verification.",
         "exceeds_threshold": true,
-        "threshold_difference_c": 1.5,
+        "threshold_difference_c": 1.3,
         "historical_markov_scenario": {
           "is_conditioning_state": false,
           "conditional_exceedance_probability": 0.1529,
@@ -113739,15 +113740,15 @@
       {
         "day_index": 4,
         "lead_days": 3,
-        "date": "2026-10-13",
-        "forecast_max_temp_c": 37.0,
+        "date": "2026-10-14",
+        "forecast_max_temp_c": 37.3,
         "is_today": false,
         "is_future": true,
         "phase": "future_nwp_projection",
-        "display_label": "Day +3 (2026-10-13)",
+        "display_label": "Day +3 (2026-10-14)",
         "temporal_description": "Operational NWP model projection (3-day forecast lead time). Pending future verification.",
         "exceeds_threshold": true,
-        "threshold_difference_c": 1.0,
+        "threshold_difference_c": 1.3,
         "historical_markov_scenario": {
           "is_conditioning_state": false,
           "conditional_exceedance_probability": 0.064,
@@ -113767,15 +113768,15 @@
       {
         "day_index": 5,
         "lead_days": 4,
-        "date": "2026-10-14",
-        "forecast_max_temp_c": 37.1,
+        "date": "2026-10-15",
+        "forecast_max_temp_c": 36.5,
         "is_today": false,
         "is_future": true,
         "phase": "future_nwp_projection",
-        "display_label": "Day +4 (2026-10-14)",
+        "display_label": "Day +4 (2026-10-15)",
         "temporal_description": "Operational NWP model projection (4-day forecast lead time). Pending future verification.",
         "exceeds_threshold": true,
-        "threshold_difference_c": 1.1,
+        "threshold_difference_c": 0.5,
         "historical_markov_scenario": {
           "is_conditioning_state": false,
           "conditional_exceedance_probability": 0.0302,
@@ -113795,15 +113796,15 @@
       {
         "day_index": 6,
         "lead_days": 5,
-        "date": "2026-10-15",
-        "forecast_max_temp_c": 36.6,
+        "date": "2026-10-16",
+        "forecast_max_temp_c": 35.9,
         "is_today": false,
         "is_future": true,
         "phase": "future_nwp_projection",
-        "display_label": "Day +5 (2026-10-15)",
+        "display_label": "Day +5 (2026-10-16)",
         "temporal_description": "Operational NWP model projection (5-day forecast lead time). Pending future verification.",
-        "exceeds_threshold": true,
-        "threshold_difference_c": 0.6,
+        "exceeds_threshold": false,
+        "threshold_difference_c": -0.1,
         "historical_markov_scenario": {
           "is_conditioning_state": false,
           "conditional_exceedance_probability": 0.0174,
@@ -113823,15 +113824,15 @@
       {
         "day_index": 7,
         "lead_days": 6,
-        "date": "2026-10-16",
-        "forecast_max_temp_c": 36.8,
+        "date": "2026-10-17",
+        "forecast_max_temp_c": 36.3,
         "is_today": false,
         "is_future": true,
         "phase": "future_nwp_projection",
-        "display_label": "Day +6 (2026-10-16)",
+        "display_label": "Day +6 (2026-10-17)",
         "temporal_description": "Operational NWP model projection (6-day forecast lead time). Pending future verification.",
         "exceeds_threshold": true,
-        "threshold_difference_c": 0.8,
+        "threshold_difference_c": 0.3,
         "historical_markov_scenario": {
           "is_conditioning_state": false,
           "conditional_exceedance_probability": 0.0125,
@@ -113857,28 +113858,28 @@
       "n_pending_future_days": 6,
       "validated_dates": [],
       "same_day_diagnostic_dates": [
-        "2026-10-10"
+        "2026-10-11"
       ],
       "pending_dates": [
-        "2026-10-11",
         "2026-10-12",
         "2026-10-13",
         "2026-10-14",
         "2026-10-15",
-        "2026-10-16"
+        "2026-10-16",
+        "2026-10-17"
       ],
       "mae_c": null,
       "bias_c": null,
       "verification_target_nature": "ECMWF ERA5 Reanalysis Grid Proxy (Area-averaged cell). Notice: Reanalysis estimates share numerical parameterization errors with NWP models and do not constitute independent physical station verification.",
-      "validation_rule": "Strict out-of-sample discipline: Only forecasts fetched prior to the target date's heating window can be validated once subsequent observations finalize. Same-day post-peak retrievals and unobserved future dates are strictly excluded from MAE and bias metrics.",
-      "status_statement": "0 out-of-sample forecast dates validated. 1 same-day post-peak retrieval excluded from skill scoring. 6 future forecast dates (Oct 11\u201316) await observation and cannot yet be validated."
+      "validation_rule": "Strict out-of-sample discipline: Only forecasts fetched prior to the target date's observation cycle can be validated once subsequent observations finalize. Current-day retrievals before local day conclusion and unobserved future dates are strictly excluded from MAE and bias metrics.",
+      "status_statement": "0 out-of-sample forecast dates validated. 1 current-day diagnostic (2026-10-11) excluded from out-of-sample validation. 6 future forecast dates (Oct 12\u2013Oct 17) await observation and cannot yet be validated."
     },
     "meteorological_comparison": {
       "open_meteo_nwp_grid": {
         "coordinates": "19.0861\u00b0N, 72.8529\u00b0E (Elevation 6.0m)",
         "forecast_max_range_c": [
-          36.6,
-          37.8
+          35.9,
+          37.3
         ],
         "character": "Inland / suburban Mumbai grid cell (~25 km resolution)"
       },

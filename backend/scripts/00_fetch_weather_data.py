@@ -16,7 +16,7 @@ Coverage:                1950-01-01 to latest date available from API
 
 Guarantees:
 - Robust error handling, retries, and explicit caching detection.
-- Strictly separates Mumbai cache from any Delhi files; NEVER falls back to Delhi data.
+- Strictly validates Mumbai dataset coordinates (~19.08°N); never falls back to unverified cache data.
 - Missing values and duplicate dates explicitly detected, counted, and recorded.
 - Never silently fabricates data when the API fails.
 - Never generates weather forecasts from statistical distributions or persistence;
@@ -90,8 +90,11 @@ def fetch_open_meteo_archive(
     Queries Open-Meteo Historical Archive API for daily maximum temperatures in Mumbai.
     Dynamically resolves the latest available date if end_date is None or out of range.
     """
+    # Historical archive only finalizes for completed calendar days prior to today;
+    # the active current day is tracked by the NWP forecast API.
     base_url = "https://archive-api.open-meteo.com/v1/archive"
-    target_end_date = end_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    yesterday_str = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+    target_end_date = end_date or yesterday_str
 
     def make_url(e_date: str) -> str:
         params = {
@@ -200,9 +203,9 @@ def fetch_open_meteo_forecast(
             lead_days = idx - 1  # 0 for today, 1..6 for future days
 
             if is_today:
-                phase_label = "today_elapsed_peak"
+                phase_label = "today_current_cycle"
                 display_label = f"Today ({d_str})"
-                temporal_desc = "Same-day observation / elapsed daylight maximum (retrieved after afternoon peak). Excluded from out-of-sample forecast validation."
+                temporal_desc = "Current-day observation cycle (retrieved during diurnal heating window before local day conclusion). Excluded from out-of-sample forecast validation."
                 # Day 1 is conditioning state S_0, not an unobserved future transition probability
                 markov_scenario_data = {
                     "is_conditioning_state": True,
@@ -210,7 +213,7 @@ def fetch_open_meteo_forecast(
                     "conditional_exceedance_probability": None,
                     "disclaimer": "Observed state S_0, not a forward transition probability.",
                 }
-                # Same-day diagnostic comparison: excluded from out-of-sample forecast validation
+                # Current-day diagnostic comparison: excluded from out-of-sample forecast validation
                 val_status = "same_day_diagnostic_excluded"
                 is_val = False
                 obs_t = observed_lookup.get(d_str, t_float)
@@ -218,7 +221,7 @@ def fetch_open_meteo_forecast(
                 abs_diff = round(abs(diff_val), 2) if diff_val is not None else None
                 val_note = (
                     f"Same-day diagnostic comparison against ERA5 grid proxy ({obs_t}°C). "
-                    "Excluded from out-of-sample forecast validation ledger because API retrieval occurred after the diurnal heating peak."
+                    "Current-Day Diagnostic — Excluded from Out-of-Sample Validation because retrieval occurred before the local day has ended and finalized observations are available."
                 )
             else:
                 k = lead_days
@@ -269,8 +272,23 @@ def fetch_open_meteo_forecast(
         same_day_excluded = [d for d in days if d["validation"]["status"] == "same_day_diagnostic_excluded"]
         pending_pairs = [d for d in days if d["validation"]["status"] == "pending_future_observation"]
 
-        mae_val = round(float(np.mean([d["validation"]["difference_c"] for d in out_of_sample_val_pairs])), 2) if out_of_sample_val_pairs else None
+        mae_val = round(float(np.mean([abs(d["validation"]["difference_c"]) for d in out_of_sample_val_pairs])), 2) if out_of_sample_val_pairs else None
         bias_val = round(float(np.mean([d["validation"]["difference_c"] for d in out_of_sample_val_pairs])), 2) if out_of_sample_val_pairs else None
+
+        if pending_pairs:
+            try:
+                p_start = datetime.strptime(pending_pairs[0]["date"], "%Y-%m-%d").strftime("%b %d")
+                p_end = datetime.strptime(pending_pairs[-1]["date"], "%Y-%m-%d").strftime("%b %d")
+                p_range_str = f"{p_start}–{p_end}"
+            except Exception:
+                p_range_str = "future dates"
+        else:
+            p_range_str = "future dates"
+
+        same_day_desc = f"{len(same_day_excluded)} current-day diagnostic"
+        if same_day_excluded:
+            same_day_desc += f" ({same_day_excluded[0]['date']})"
+        same_day_desc += " excluded from out-of-sample validation."
 
         validation_summary = {
             "total_target_days": len(days),
@@ -284,8 +302,8 @@ def fetch_open_meteo_forecast(
             "mae_c": mae_val,
             "bias_c": bias_val,
             "verification_target_nature": "ECMWF ERA5 Reanalysis Grid Proxy (Area-averaged cell). Notice: Reanalysis estimates share numerical parameterization errors with NWP models and do not constitute independent physical station verification.",
-            "validation_rule": "Strict out-of-sample discipline: Only forecasts fetched prior to the target date's heating window can be validated once subsequent observations finalize. Same-day post-peak retrievals and unobserved future dates are strictly excluded from MAE and bias metrics.",
-            "status_statement": f"0 out-of-sample forecast dates validated. 1 same-day post-peak retrieval excluded from skill scoring. {len(pending_pairs)} future forecast dates (Oct 11–16) await observation and cannot yet be validated.",
+            "validation_rule": "Strict out-of-sample discipline: Only forecasts fetched prior to the target date's observation cycle can be validated once subsequent observations finalize. Current-day retrievals before local day conclusion and unobserved future dates are strictly excluded from MAE and bias metrics.",
+            "status_statement": f"{len(out_of_sample_val_pairs)} out-of-sample forecast dates validated. {same_day_desc} {len(pending_pairs)} future forecast dates ({p_range_str}) await observation and cannot yet be validated.",
         }
 
         # Persistent history ledger
@@ -411,8 +429,8 @@ def save_forecast_history_ledger(days: list, retrieval_time_iso: str) -> None:
 
 def is_valid_mumbai_cache(data_path: str, meta_path: str) -> bool:
     """
-    Verifies that a cached dataset actually belongs to Mumbai, not Delhi.
-    Prevents any accidental fallback to old Delhi data.
+    Verifies that a cached dataset strictly belongs to canonical Mumbai coordinates and metadata.
+    Prevents any accidental fallback to invalid or unverified external data.
     """
     if not os.path.exists(data_path) or os.path.getsize(data_path) < 1000:
         return False
@@ -424,7 +442,7 @@ def is_valid_mumbai_cache(data_path: str, meta_path: str) -> bool:
             meta = json.load(f)
         loc = meta.get("location_name", "").lower()
         lat = meta.get("latitude", 0.0)
-        # Check that it explicitly identifies Mumbai and latitude is near 19.08 (not Delhi's 28.61)
+        # Check that it explicitly identifies Mumbai and latitude is near canonical Mumbai coordinates (~19.08)
         if "mumbai" in loc and abs(lat - REQUESTED_LATITUDE) < 1.0:
             return True
     except Exception:
@@ -443,7 +461,7 @@ def ingest_data(
     """
     Fetches real Mumbai historical weather data from Open-Meteo, cleans, validates,
     records detailed metadata, and handles caching transparently.
-    Guarantees no Delhi data is ever reused.
+    Guarantees strict Mumbai spatial integrity.
     """
     is_cached = False
     cache_reason = None
@@ -474,7 +492,7 @@ def ingest_data(
         else:
             raise RuntimeError(
                 f"Failed to fetch Mumbai data from Open-Meteo API ({e}) and no valid Mumbai cache is available. "
-                "Silently substituting Delhi data or fabricated values is strictly prohibited."
+                "Silently substituting external data or fabricated values is strictly prohibited."
             )
 
     if not is_cached:

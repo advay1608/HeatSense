@@ -562,7 +562,7 @@ function fetchLiveForecastClient() {
             forecast_max_temp_c: tVal !== null ? parseFloat(tVal) : null,
             is_today: isToday,
             is_future: isFuture,
-            phase: isToday ? 'today_elapsed_peak' : 'future_nwp_projection',
+            phase: isToday ? 'today_current_cycle' : 'future_nwp_projection',
             historical_markov_scenario: {
               is_conditioning_state: isToday,
               conditional_exceedance_probability: markovP,
@@ -577,7 +577,7 @@ function fetchLiveForecastClient() {
               verification_target: 'ERA5 Reanalysis Grid Proxy (19.0861°N, 72.8529°E)',
               status: isToday ? 'same_day_diagnostic_excluded' : 'pending_future_observation',
               note: isToday
-                ? 'Same-day diagnostic comparison retrieved post-peak; excluded from out-of-sample skill score.'
+                ? 'Current-Day Diagnostic — Excluded from Out-of-Sample Validation.'
                 : 'Awaiting conclusion of target date observation cycle.'
             }
           };
@@ -600,7 +600,7 @@ function fetchLiveForecastClient() {
             mae_c: null,
             bias_c: null,
             verification_target_nature: 'ECMWF ERA5 Reanalysis Grid Proxy (Area-averaged cell). Notice: Reanalysis estimates share numerical parameterization errors with NWP models and do not constitute independent physical station verification.',
-            status_statement: '0 out-of-sample forecast dates validated. 1 same-day post-peak retrieval excluded from skill scoring. 6 future forecast dates await observation.'
+            status_statement: '0 out-of-sample forecast dates validated. 1 current-day diagnostic excluded from out-of-sample validation. 6 future forecast dates await observation.'
           }
         };
         buildForecast(DATA);
@@ -794,30 +794,38 @@ function buildForecast(data) {
     return;
   }
 
-  // Format retrieval timestamp in IST (not mislabeled as model issue time)
+  // Format retrieval timestamp in IST (labeled as data retrieval time, not upstream model issue time)
   let retrievedDisplay = 'Recent';
-  if (fcSource.retrieval_timestamp_ist) {
-    retrievedDisplay = fcSource.retrieval_timestamp_ist;
-  } else if (fcSource.retrieved_at) {
+  const now = new Date();
+  if (fcSource.retrieved_at || fcSource.retrieval_timestamp_utc || fcSource.retrieval_timestamp_ist) {
     try {
-      const d = new Date(fcSource.retrieved_at);
-      retrievedDisplay = d.toLocaleString('en-GB', {
-        timeZone: 'Asia/Kolkata',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }) + ' IST';
+      const rawIso = fcSource.retrieved_at || fcSource.retrieval_timestamp_utc;
+      let d = rawIso ? new Date(rawIso) : null;
+      if (d && !isNaN(d.getTime())) {
+        // Prevent displaying a retrieval time in the future relative to the client clock
+        if (d.getTime() > now.getTime()) {
+          d = now;
+        }
+        retrievedDisplay = d.toLocaleString('en-GB', {
+          timeZone: 'Asia/Kolkata',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }) + ' IST';
+      } else if (fcSource.retrieval_timestamp_ist) {
+        retrievedDisplay = fcSource.retrieval_timestamp_ist;
+      }
     } catch (_) {
-      retrievedDisplay = fcSource.retrieved_at;
+      retrievedDisplay = fcSource.retrieval_timestamp_ist || 'Recent';
     }
   }
 
   if (note) {
-    note.textContent = `Data retrieved: ${retrievedDisplay} · Open-Meteo NWP Grid`;
-    note.title = 'Client query retrieval timestamp from Open-Meteo API. Model initialization cycle maintained by upstream numerical weather provider.';
+    note.textContent = `Data Retrieval Time: ${retrievedDisplay} · Open-Meteo NWP Grid`;
+    note.title = 'Client data retrieval query time from Open-Meteo API (Asia/Kolkata). Model initialization cycle maintained by upstream numerical weather provider.';
   }
 
   // Render cards
@@ -846,10 +854,10 @@ function buildForecast(data) {
 
     if (isToday) {
       dateTitle = `Today · ${weekdayStr}, ${dayMonthStr}`;
-      phaseBadge = `<span class="forecast-phase-badge today">Today · Elapsed Peak</span>`;
+      phaseBadge = `<span class="forecast-phase-badge today">Today · Active Day</span>`;
       statProbHtml = `<span class="forecast-prob-badge" title="Observed conditioning state S_0">Conditioning State S₀</span>`;
       ciHtml = ``; // No uncalibrated prediction intervals
-      valHtml = `<span class="forecast-val-badge val-excluded" title="Same-day diagnostic comparison against ERA5 grid proxy; retrieved post-peak and excluded from out-of-sample skill score">Diagnostic (Post-Peak Excluded)</span>`;
+      valHtml = `<span class="forecast-val-badge val-excluded" title="Current-day diagnostic comparison against ERA5 grid proxy. Retrieved during active daytime cycle prior to local day conclusion; strictly excluded from out-of-sample validation.">Current-Day Diagnostic — Excluded from Out-of-Sample Validation</span>`;
     } else {
       const leadK = dItem.lead_days || idx;
       dateTitle = `${weekdayStr}, ${dayMonthStr} (+${leadK}d)`;
@@ -887,6 +895,7 @@ function buildForecast(data) {
 
   // Update validation ledger summary in UI if elements exist
   const valPairsEl = document.getElementById('valPairsCount');
+  const valExcludedEl = document.getElementById('valExcludedCount');
   const valPendingEl = document.getElementById('valPendingCount');
   const valMaeBiasEl = document.getElementById('valMaeBias');
   const vs = fcSource.validation_summary;
@@ -895,8 +904,43 @@ function buildForecast(data) {
       valPairsEl.textContent = `${vs.n_out_of_sample_validated ?? vs.n_validated_pairs ?? 0} dates (Strict out-of-sample rule)`;
       valPairsEl.style.color = 'var(--ink-2)';
     }
+    if (valExcludedEl) {
+      const exDates = vs.same_day_diagnostic_dates || [];
+      let exDateStr = '11 Oct 2026';
+      if (exDates.length > 0) {
+        exDateStr = exDates.map(d => {
+          const parts = d.split('-');
+          if (parts.length === 3) {
+            const dt = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2]));
+            return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+          }
+          return d;
+        }).join(', ');
+      }
+      const nEx = vs.n_same_day_diagnostic_excluded ?? exDates.length ?? 1;
+      valExcludedEl.textContent = `${nEx} date (${exDateStr})`;
+    }
     if (valPendingEl) {
-      valPendingEl.textContent = `${vs.n_pending_future_days || 6} dates (${days.slice(1).map(d => d.date?.slice(5)).join(', ') || '11–16 Oct'})`;
+      const pDates = vs.pending_dates || days.slice(1).map(d => d.date).filter(Boolean);
+      let pRangeStr = '';
+      if (pDates.length > 0) {
+        const fmtDate = (dStr) => {
+          const parts = dStr.split('-');
+          if (parts.length === 3) {
+            const dt = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2]));
+            return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          }
+          return dStr;
+        };
+        const yearStr = pDates[0].length >= 4 ? ` ${pDates[0].slice(0, 4)}` : '';
+        pRangeStr = pDates.length === 1
+          ? `${fmtDate(pDates[0])}${yearStr}`
+          : `${fmtDate(pDates[0])}–${fmtDate(pDates[pDates.length - 1])}${yearStr}`;
+      } else {
+        pRangeStr = 'awaiting observation';
+      }
+      const nPend = vs.n_pending_future_days ?? pDates.length ?? 6;
+      valPendingEl.textContent = `${nPend} dates (${pRangeStr})`;
     }
     if (valMaeBiasEl) {
       if (vs.mae_c !== null && vs.mae_c !== undefined) {
@@ -974,9 +1018,9 @@ function buildComparisonTable(data) {
 
   t.innerHTML = '';
   row(t, 'Empirical Baseline (Ground Truth)', `${(emp.prob * 100).toFixed(2)}% (${emp.count.toLocaleString()} / ${emp.total.toLocaleString()} days)`, `Observed proportion of historical days strictly exceeding ${currentThreshold.toFixed(1)}°C across ${data.core_stats.n_days.toLocaleString()} observations. Primary directly verifiable baseline.`);
-  row(t, `Parametric Model (${modelLabel(currentModel)})`, mProb !== null ? `${(mProb * 100).toFixed(2)}%` : '—', `Theoretical survival function under fitted ${modelLabel(currentModel)} distribution at ${currentThreshold.toFixed(1)}°C. Candidate comparison only.`);
-  row(t, 'Monte Carlo Simulation (10k draws)', `${(sim.comparison.monte_carlo_10k * 100).toFixed(2)}%`, `Parametric random draws from fitted model at canonical ${sim.threshold_c}°C. Confirms numerical convergence of model SF; does not validate whether model is empirically true.`);
-  row(t, 'Bootstrap Resampling (10k draws)', `${(sim.comparison.bootstrap * 100).toFixed(2)}%`, `Non-parametric resampling with replacement directly from ${data.core_stats.n_days.toLocaleString()} empirical observations at canonical ${sim.threshold_c}°C.`);
+  row(t, `Parametric Theoretical Model (${modelLabel(currentModel)})`, mProb !== null ? `${(mProb * 100).toFixed(2)}%` : '—', `Theoretical survival function under fitted ${modelLabel(currentModel)} distribution at ${currentThreshold.toFixed(1)}°C. Candidate comparison only.`);
+  row(t, 'Log-Normal Monte Carlo (10k draws)', `${(sim.comparison.monte_carlo_10k * 100).toFixed(2)}%`, `Parametric random draws strictly sampled from the fitted best-fit Log-Normal model at canonical ${sim.threshold_c}°C. Confirms numerical convergence of theoretical survival function; does not validate whether the model is empirically true.`);
+  row(t, 'Empirical Bootstrap Resampling (10k draws)', `${(sim.comparison.bootstrap * 100).toFixed(2)}%`, `Non-parametric resampling with replacement directly from ${data.core_stats.n_days.toLocaleString()} empirical observations at canonical ${sim.threshold_c}°C. Completely distribution-free and separate from both parametric estimates.`);
   row(t, 'Empirical Average Spacing (1/P)', emp.prob > 0 ? `1 in ${(1 / emp.prob).toFixed(1)} days` : 'rare event', `Inverse of long-run empirical exceedance rate. Extreme temperatures cluster in multi-day runs, so this is not a regular recurring schedule.`);
   row(t, 'Goodness-of-Fit Diagnostic', 'Rejected (KS p < 0.0001)', 'Strong annual seasonality violates unimodality, formally rejecting all single candidate distributions. Lowest AIC indicates relative ranking, not adequate absolute fit.');
 }
@@ -997,13 +1041,15 @@ function buildSeasonalTable(data) {
   t.appendChild(header);
 
   data.core_stats.seasonal_summary.forEach(s => {
+    const rateFrac = s.n_days > 0 ? (s.exceedance_count / s.n_days) : 0;
+    const ratePct = (rateFrac * 100).toFixed(2);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="padding:0.45rem 0; font-weight:600; color:var(--ink);">${s.season_name}</td>
       <td style="text-align:right; padding:0.45rem 0; color:var(--ink-2);">${s.mean_c.toFixed(1)}°C</td>
       <td style="text-align:right; padding:0.45rem 0; color:var(--red); font-weight:600;">${s.max_c.toFixed(1)}°C</td>
       <td style="text-align:right; padding:0.45rem 0; color:var(--ink-2);">${s.exceedance_count.toLocaleString()} / ${s.n_days.toLocaleString()}</td>
-      <td style="text-align:right; padding:0.45rem 0; font-weight:700; color:${s.exceedance_rate > 0.3 ? 'var(--red)' : s.exceedance_rate > 0.05 ? 'var(--amber)' : 'var(--green-dark)'};">${(s.exceedance_rate * 100).toFixed(1)}%</td>
+      <td style="text-align:right; padding:0.45rem 0; font-weight:700; color:${rateFrac > 0.3 ? 'var(--red)' : rateFrac > 0.05 ? 'var(--amber)' : 'var(--green-dark)'};">${ratePct}%</td>
     `;
     t.appendChild(tr);
   });

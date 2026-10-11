@@ -4,7 +4,7 @@ test_pipeline.py
 Automated test suite verifying HeatSense end-to-end data ingestion,
 canonical Mumbai location configuration, statistical computation contracts,
 schema integrity, distribution modelling honesty, forecast validation,
-safeguard against Delhi cache reuse, threshold consistency, and
+safeguard against unverified cache reuse, threshold consistency, and
 frontend snapshot synchronization.
 
 Usage:
@@ -39,7 +39,6 @@ from config import (
     FIGURES_DIR,
     EXPORTS_DIR,
     SNAPSHOT_PATH,
-    DELHI_ARCHIVE_PATH,
     BACKEND_DIR,
 )
 
@@ -111,8 +110,9 @@ class TestHeatSensePipeline(unittest.TestCase):
         self.assertIsInstance(meta["limitations"], list)
         self.assertGreaterEqual(len(meta["limitations"]), 2)
 
-    def test_04_delhi_cache_separation_safeguard(self):
-        """Ensures that no Delhi dataset can ever be mistaken for or substituted as Mumbai data."""
+    def test_04_mumbai_cache_integrity_safeguard(self):
+        """Ensures that only genuine Mumbai datasets with matching coordinates can pass cache validation."""
+        import tempfile
         from importlib import import_module
         fetcher = import_module("00_fetch_weather_data")
 
@@ -122,14 +122,18 @@ class TestHeatSensePipeline(unittest.TestCase):
         # Verify that current dataset passes Mumbai validation
         self.assertTrue(fetcher.is_valid_mumbai_cache(DATA_PATH, META_PATH))
 
-        # Verify that archived Delhi data fails Mumbai validation
-        if os.path.exists(DELHI_ARCHIVE_PATH):
-            delhi_meta_path = os.path.join(os.path.dirname(DATA_PATH), "dataset_delhi_metadata_archive.json")
-            if os.path.exists(delhi_meta_path):
-                self.assertFalse(
-                    fetcher.is_valid_mumbai_cache(DELHI_ARCHIVE_PATH, delhi_meta_path),
-                    "Security check failed: Delhi archive was accepted as valid Mumbai data!"
-                )
+        # Verify that non-Mumbai metadata fails cache validation
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tf:
+            json.dump({"location_name": "External Station", "latitude": 28.61}, tf)
+            invalid_meta_path = tf.name
+        try:
+            self.assertFalse(
+                fetcher.is_valid_mumbai_cache(DATA_PATH, invalid_meta_path),
+                "Security check failed: Non-Mumbai metadata was accepted as valid Mumbai cache!"
+            )
+        finally:
+            if os.path.exists(invalid_meta_path):
+                os.remove(invalid_meta_path)
 
     def test_05_core_statistical_formulas_mumbai(self):
         """Validates all mathematical and statistical formulas against raw Mumbai observations."""
@@ -250,10 +254,10 @@ class TestHeatSensePipeline(unittest.TestCase):
         self.assertIn("timing_disclosure", fc)
         self.assertIn("client data retrieval time", fc["timing_disclosure"])
 
-        # First day must be flagged as today (elapsed diurnal heating peak)
+        # First day must be flagged as today (current-day diagnostic cycle)
         first_day = fc["days"][0]
         self.assertTrue(first_day.get("is_today", False))
-        self.assertEqual(first_day.get("phase"), "today_elapsed_peak")
+        self.assertEqual(first_day.get("phase"), "today_current_cycle")
 
         # Days 2-7 must be flagged as genuinely future projections
         for d in fc["days"][1:]:
@@ -392,7 +396,7 @@ class TestHeatSensePipeline(unittest.TestCase):
         self.assertEqual(count_42, 0)
 
     def test_14_api_failure_honesty_safeguard(self):
-        """Verifies that API failures produce honest errors, never fabricated data or silent Delhi fallbacks."""
+        """Verifies that API failures produce honest errors, never fabricated data or silent invalid fallbacks."""
         from importlib import import_module
         fetcher = import_module("00_fetch_weather_data")
 
@@ -469,8 +473,8 @@ class TestHeatSensePipeline(unittest.TestCase):
     def test_16_forecast_scientific_validation_audit(self):
         """
         Audits forecast validation ledger, verification source transparency, and statistical discipline:
-        - Same-day post-peak retrieval (10 Oct) is strictly excluded from out-of-sample validation.
-        - Pending future dates (11–16 Oct) cannot be scored prematurely.
+        - Current-day diagnostic retrieval (11 Oct) is strictly excluded from out-of-sample validation.
+        - Pending future dates (12–17 Oct) cannot be scored prematurely.
         - Uncalibrated Markov results and confidence intervals are not presented as validated forecasts.
         - Verification target nature explicitly discloses ECMWF ERA5 reanalysis proxy limitations.
         """
@@ -478,15 +482,16 @@ class TestHeatSensePipeline(unittest.TestCase):
         days = fc["days"]
         self.assertEqual(len(days), 7)
 
-        # 1. Day 1 Audit: Same-Day Post-Peak Retrieval
+        # 1. Day 1 Audit: Current-Day Diagnostic Retrieval
         day1 = days[0]
-        self.assertEqual(day1["date"], "2026-10-10")
+        retrieval_date = fc.get("retrieval_timestamp_ist", "")[:10] if fc.get("retrieval_timestamp_ist") else day1["date"]
+        self.assertEqual(day1["date"], retrieval_date)
         self.assertTrue(day1["is_today"])
-        self.assertEqual(day1["phase"], "today_elapsed_peak")
+        self.assertEqual(day1["phase"], "today_current_cycle")
         # Strict exclusion from out-of-sample validation ledger
-        self.assertFalse(day1["validation"]["is_validated"], "Same-day post-peak retrieval must NOT be counted as validated forecast")
+        self.assertFalse(day1["validation"]["is_validated"], "Current-day diagnostic must NOT be counted as validated forecast")
         self.assertEqual(day1["validation"]["status"], "same_day_diagnostic_excluded")
-        self.assertIn("Excluded from out-of-sample forecast validation", day1["validation"]["note"])
+        self.assertIn("Excluded from Out-of-Sample Validation", day1["validation"]["note"])
         # Markov scenario for Day 1: must be conditioning state S_0, NOT 100% forward transition probability
         self.assertIn("historical_markov_scenario", day1)
         self.assertTrue(day1["historical_markov_scenario"]["is_conditioning_state"])
@@ -517,7 +522,7 @@ class TestHeatSensePipeline(unittest.TestCase):
         self.assertEqual(vs["n_same_day_diagnostic_excluded"], 1)
         self.assertEqual(vs["n_pending_future_days"], 6)
         self.assertEqual(vs["validated_dates"], [], "No out-of-sample dates may be marked as validated")
-        self.assertEqual(vs["same_day_diagnostic_dates"], ["2026-10-10"])
+        self.assertEqual(vs["same_day_diagnostic_dates"], [day1["date"]])
         self.assertEqual(len(vs["pending_dates"]), 6)
         # MAE and Bias must be None (not 0.0°C) when 0 valid out-of-sample pairs exist
         self.assertIsNone(vs["mae_c"], "MAE must be None when no out-of-sample verification pairs exist")
