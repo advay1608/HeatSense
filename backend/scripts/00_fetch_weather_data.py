@@ -92,6 +92,7 @@ def fetch_open_meteo_archive(
     """
     # Historical archive only finalizes for completed calendar days prior to today;
     # the active current day is tracked by the NWP forecast API.
+    base_url = "https://archive-api.open-meteo.com/v1/archive"
     yesterday_str = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
     target_end_date = end_date or yesterday_str
 
@@ -271,7 +272,7 @@ def fetch_open_meteo_forecast(
         same_day_excluded = [d for d in days if d["validation"]["status"] == "same_day_diagnostic_excluded"]
         pending_pairs = [d for d in days if d["validation"]["status"] == "pending_future_observation"]
 
-        mae_val = round(float(np.mean([d["validation"]["difference_c"] for d in out_of_sample_val_pairs])), 2) if out_of_sample_val_pairs else None
+        mae_val = round(float(np.mean([abs(d["validation"]["difference_c"]) for d in out_of_sample_val_pairs])), 2) if out_of_sample_val_pairs else None
         bias_val = round(float(np.mean([d["validation"]["difference_c"] for d in out_of_sample_val_pairs])), 2) if out_of_sample_val_pairs else None
 
         if pending_pairs:
